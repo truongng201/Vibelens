@@ -12,12 +12,10 @@ class SongsSpider(scrapy.Spider):
     item_scraped = 0
     START_URLS = [
         {"url": "https://hopamchuan.com/rhythm/v/ballad", "max_offset": 10000},
-        {"url": "https://hopamchuan.com/rhythm/v/disco", "max_offset": 1500},
-        {"url": "https://hopamchuan.com/rhythm/v/blue", "max_offset": 3000},
-        {"url": "https://hopamchuan.com/rhythm/v/slow", "max_offset": 1500},
-        {"url": "https://hopamchuan.com/rhythm/v/rock", "max_offset": 3000},
-        {"url": "https://hopamchuan.com/rhythm/v/rap", "max_offset": 3000},
-        {"url": "https://hopamchuan.com/rhythm/v/folk", "max_offset": 3000},
+        {"url": "https://hopamchuan.com/rhythm/v/disco", "max_offset": 10000},
+        {"url": "https://hopamchuan.com/rhythm/v/blue", "max_offset": 10000},
+        {"url": "https://hopamchuan.com/rhythm/v/slow", "max_offset": 10000},
+        {"url": "https://hopamchuan.com/rhythm/v/rock", "max_offset": 10000},
     ]
     
     def start_requests(self):   

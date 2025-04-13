@@ -22,8 +22,8 @@ DEFAULT_INTERVAL_TIME_IN_SECOND = 15
 CELERY_BEAT_SCHEDULE = {
     'crawl-songs-every-minutes': {
         'task': "crawl_songs",    
-        # 'schedule': crontab(minute=0, hour=f'*/{CRAWL_INTERVAL_TIME}'),  # Every 3 hours
-        'schedule': crontab(minute='*/5'),  # Every minute
+        'schedule': crontab(minute=0, hour=f'*/{CRAWL_INTERVAL_TIME}'),  # Every 3 hours
+        # 'schedule': crontab(minute='*/5'),  # Every 5 minute
         'args': (),  # Pass any arguments to the task here
     },
 }
