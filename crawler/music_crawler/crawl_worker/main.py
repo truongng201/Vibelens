@@ -22,8 +22,8 @@ DEFAULT_INTERVAL_TIME_IN_SECOND = 15
 CELERY_BEAT_SCHEDULE = {
     'crawl-songs-every-minutes': {
         'task': "crawl_songs",    
-        'schedule': crontab(minute=0, hour=f'*/{CRAWL_INTERVAL_TIME}'),  # Every 3 hours
-        # 'schedule': crontab(minute='*/1'),  # Every minute
+        # 'schedule': crontab(minute=0, hour=f'*/{CRAWL_INTERVAL_TIME}'),  # Every 3 hours
+        'schedule': crontab(minute='*/5'),  # Every minute
         'args': (),  # Pass any arguments to the task here
     },
 }
@@ -34,36 +34,36 @@ def create_celery_app(module):
     celery.conf.beat_schedule = CELERY_BEAT_SCHEDULE
     celery.conf.timezone = 'UTC'
     
-    class TaskBase(celery.Task):
-        max_retries = None # set to None to infinite retries
-        retry_kwargs = {}
+    # class TaskBase(celery.Task):
+    #     max_retries = None # set to None to infinite retries
+    #     retry_kwargs = {}
 
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    #     def __init__(self, *args, **kwargs):
+    #         super().__init__(*args, **kwargs)
+    #         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-            if not hasattr(self, '_orig_run'):
-                @wraps(self.run)
-                def run(*args, **kwargs):
-                    try:
-                        self._logger.info(f"Running task: {self.name}")
-                        return self._orig_run(*args, **kwargs)
-                    # Add retry to all task in this worker if catch any exception
-                    # and log the error before retry
-                    except Exception as exc:
-                        self._logger.exception(f"Task {self.name} encountered an error and will retry: {exc}")
+    #         if not hasattr(self, '_orig_run'):
+    #             @wraps(self.run)
+    #             def run(*args, **kwargs):
+    #                 try:
+    #                     self._logger.info(f"Running task: {self.name}")
+    #                     return self._orig_run(*args, **kwargs)
+    #                 # Add retry to all task in this worker if catch any exception
+    #                 # and log the error before retry
+    #                 except Exception as exc:
+    #                     self._logger.exception(f"Task {self.name} encountered an error and will retry: {exc}")
 
-                        if 'countdown' not in self.retry_kwargs:
-                            retry_kwargs = self.retry_kwargs.copy()
-                            retry_kwargs.update({'countdown': DEFAULT_INTERVAL_TIME_IN_SECOND})
-                        else:
-                            retry_kwargs = self.retry_kwargs
+    #                     if 'countdown' not in self.retry_kwargs:
+    #                         retry_kwargs = self.retry_kwargs.copy()
+    #                         retry_kwargs.update({'countdown': DEFAULT_INTERVAL_TIME_IN_SECOND})
+    #                     else:
+    #                         retry_kwargs = self.retry_kwargs
 
-                        raise self.retry(**retry_kwargs)
+    #                     raise self.retry(**retry_kwargs)
 
-                self._orig_run, self.run = self.run, run
+    #             self._orig_run, self.run = self.run, run
 
-    celery.Task = TaskBase
+    # celery.Task = TaskBase
     return celery
 
 app = create_celery_app('crawl_worker')

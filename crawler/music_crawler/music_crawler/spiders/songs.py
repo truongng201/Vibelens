@@ -30,7 +30,7 @@ class SongsSpider(scrapy.Spider):
     def parse_song_link(self, response):
         # Extract song links from the response
         song_links = response.css("a.song-title::attr(href)").getall()
-        self.logger.info(f"Found {len(song_links)} song links on {response.url}")
+        print(f"Found {len(song_links)} song links on {response.url}")
         for link in song_links:
             yield response.follow(link, callback=self.parse_song_metadata)
     
@@ -40,7 +40,6 @@ class SongsSpider(scrapy.Spider):
             return
         
         # Extract song metadata from the response
-        self.logger.info(f"Scraping song metadata from: {response.url}")
         title = response.css("#song-title span::text").get()
         artist = response.css(".author-item::text").get()
         genre = response.css("#display-rhythm::text").get() or "Unknown"
@@ -58,6 +57,7 @@ class SongsSpider(scrapy.Spider):
         song_id_hash = hashlib.md5(response.url.split("/")[-2].encode()).hexdigest()
         song_id = f"{song_id_hash}"
         self.item_scraped += 1
+        print(f"Scraped song: {title} by {artist}")
         yield SongItem(
             id = song_id,
             song_url=response.url,
@@ -66,6 +66,4 @@ class SongsSpider(scrapy.Spider):
             genre=genre.strip(),
             lyrics=lyrics
         )
-        print(f"Scraped song: {title} by {artist}")
-        # delay
-        time.sleep(60)
+        

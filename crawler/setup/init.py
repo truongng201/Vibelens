@@ -1,1 +1,0 @@
-# initialize qdrant collection

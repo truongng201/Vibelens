@@ -26,6 +26,7 @@ services:
       - VECTOR_DATABASE_HOST=vector-database
       - VECTOR_DATABASE_PORT=6333
       - VECTOR_DATABASE_COLLECTION_NAME=vibelen-songs
+      - VECTOR_DATABASE_VECTOR_NAME=songs-embedding
 
   database-crawler:
     image: postgres:16
@@ -39,7 +40,7 @@ services:
       - "5432:5432"
     volumes:
       - ./crawl-data:/var/lib/postgresql/data
-      - ./setup/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./ini/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin-crawler:
     image: dpage/pgadmin4:9.2

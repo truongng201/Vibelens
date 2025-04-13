@@ -28,3 +28,4 @@ __pycache__/
 *.sublime-theme
 *-data
 celerybeat-*
+.cache
