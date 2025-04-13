@@ -47,5 +47,4 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV PATH="/opt/venv/bin:$PATH"
 
-# CMD ["celery", "-A", "crawl_worker.main", "worker", "-B", "-l", "info"]
-CMD ["tail", "-f", "/dev/null"]
+CMD ["celery", "-A", "crawl_worker.main", "worker", "-B", "-l", "info"]
