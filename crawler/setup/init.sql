@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS songs (
+    id TEXT PRIMARY KEY,
+    song_url TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    artist TEXT NOT NULL,
+    genre TEXT,
+    lyrics TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
