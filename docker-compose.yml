@@ -1,0 +1,78 @@
+version: '3.8'
+name: vibelens-music-crawler
+
+services:
+
+  music-crawler:
+    build:
+      context: ./music_crawler
+      dockerfile: Dockerfile
+    container_name: music-crawler
+    restart: unless-stopped
+    volumes:
+      - ./music_crawler:/app
+    depends_on:
+      - database-crawler
+    environment:
+      - POSTGRES_HOST=database-crawler
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=vibelens
+      - REDIS_HOST=cache-crawl
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=admin
+      - REDIS_DB=0
+
+  database-crawler:
+    image: postgres:16
+    container_name: database-crawler
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: vibelens
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./crawl-data:/var/lib/postgresql/data
+      - ./setup/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin-crawler:
+    image: dpage/pgadmin4:9.2
+    container_name: pgadmin-crawler
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - database-crawler
+
+  vector-database:
+    image: qdrant/qdrant:v1.13.6
+    container_name: qdrant
+    ports:
+      - "6333:6333"   # HTTP API port
+      - "6334:6334"   # gRPC port
+    volumes:
+      - vector-data:/qdrant/storage
+    restart: unless-stopped
+  
+  cache-crawl:
+    image: bitnami/redis:7.4.2
+    container_name: cache-crawl
+    volumes:
+      - ./cache-data:/data
+    environment:
+      - REDIS_PASSWORD=admin
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  crawl-data:
+    driver: local
+  vector-data:
+    driver: local
