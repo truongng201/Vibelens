@@ -62,10 +62,10 @@ DOWNLOAD_DELAY = 1
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-   "music_crawler.pipelines.UploadToDatabasePipeline.UploadToDatabasePipeline": 100, # Higher number means lower priority
-   "music_crawler.pipelines.UploadToVectorDatabasePipeline.UploadToVectorDatabasePipeline": 200,
-}
+# ITEM_PIPELINES = {
+#    "music_crawler.pipelines.UploadToDatabasePipeline.UploadToDatabasePipeline": 100, # Higher number means lower priority
+#    "music_crawler.pipelines.UploadToVectorDatabasePipeline.UploadToVectorDatabasePipeline": 200,
+# }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -94,3 +94,13 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 LOG_LEVEL = "INFO"
+
+
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy_selenium.SeleniumMiddleware': 800,
+    'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560
+}
+
+SELENIUM_DRIVER_NAME = 'chrome'
+SELENIUM_DRIVER_EXECUTABLE_PATH = "D:/chromedriver-win64/chromedriver-win64/chromedriver.exe"
+SELENIUM_DRIVER_ARGUMENTS = []
