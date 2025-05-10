@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask-app
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    # environment:
+    #   - KAFKA_URI=${KAFKA_URI}
+    #   - KAFKA_TOPIC=${KAFKA_TOPIC}
+    #   - KAFKA_SCHEMA_URL=${KAFKA_SCHEMA_URL}
+    #   - KAFKA_SCHEMA_SUBJECT=${KAFKA_SCHEMA_SUBJECT}
+    #   - KAFKA_GROUP_ID=${KAFKA_GROUP_ID}
+    volumes:
+      - .:/usr/src/app
+   
