@@ -13,6 +13,8 @@ services:
     depends_on:
       - vector-database
       - cache-crawl
+    networks:
+      - shared-network
 
   database:
     image: postgres:16
@@ -39,6 +41,7 @@ services:
     depends_on:
       - database
 
+
   vector-database:
     image: qdrant/qdrant:v1.13.6
     container_name: vector-database
@@ -47,19 +50,8 @@ services:
       - "6334:6334"   # gRPC port
     restart: always
   
-  cache-crawl:
-    image: bitnami/redis:7.4.2
-    container_name: cache-crawl
-    volumes:
-      - ./cache-data:/data
-    environment:
-      - REDIS_PASSWORD=admin
-    ports:
-      - "6379:6379"
-    restart: always
 
 volumes:
   vector-data:
     driver: local
-  cache-data:
-    driver: local
+  

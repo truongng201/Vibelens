@@ -1,0 +1,82 @@
+name: CI/CD frontend service pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check_folder_changed:
+    name: Check if frontend service folder changed
+    runs-on: ubuntu-latest
+    outputs:
+      is_changed: ${{ steps.changes.outputs.service }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            service:
+              - 'frontend/**'
+
+      # run only if "frontend" folder was changed
+      - name: "frontend is changed"
+        if: steps.changes.outputs.service == 'true'
+        run: echo "Folder frontend has changed"
+
+      # run only if "service" folder was not changed
+      - name: "frontend service is not changed"
+        if: steps.changes.outputs.service == 'false'
+        run: echo "Folder frontend has not changed"
+
+  build_and_push:
+    name: Build and Push Client Docker Image
+    runs-on: ubuntu-latest
+    needs: [check_folder_changed]
+    if: needs.check_folder_changed.outputs.is_changed == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # - name: Set up services config
+      #   run: |
+      #     cd services/product/config
+      #     echo "${{ secrets.SERVER_CONFIG_FILE }}" > config.yml
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          cd frontend/
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-frontend:latest -f Dockerfile .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-frontend:latest
+
+  pull_and_run_on_droplet:
+    needs: [build_and_push]
+    name: Pull and Run Docker Image on Droplet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          cd ~/.ssh/ 
+          touch id_rsa && touch known_hosts && chmod 600 id_rsa
+          echo "${{ secrets.DIGITALOCEAN_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+
+      - name: Add Droplet to known hosts
+        run: ssh-keyscan ${{ secrets.SERVER_IP_ADDRESS}} >> ~/.ssh/known_hosts
+
+      - name: Pull and run Docker images on Droplet
+        run: |
+          ssh ${{ secrets.SERVER_USER}}@${{ secrets.SERVER_IP_ADDRESS}} 'docker pull ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-frontend:latest'
+          ssh ${{ secrets.SERVER_USER}}@${{ secrets.SERVER_IP_ADDRESS}} 'docker service update --force services_frontend'
+          ssh ${{ secrets.SERVER_USER}}@${{ secrets.SERVER_IP_ADDRESS}} 'docker image prune -a -f'
