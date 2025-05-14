@@ -16,12 +16,11 @@ REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 CELERY_TASK_LIST = [
     "crawl_worker.tasks.crawl_songs",
 ]
-CRAWL_INTERVAL_TIME = os.getenv('CRAWL_INTERVAL_TIME', '3') # in hours
-DEFAULT_INTERVAL_TIME_IN_SECOND = 60 # 1 minute
+CRAWL_INTERVAL_TIME = os.getenv('CRAWL_INTERVAL_TIME', '21600')
 CELERY_BEAT_SCHEDULE = {
     'crawl-songs-every-minutes': {
         'task': "crawl_songs",    
-        'schedule': timedelta(seconds=DEFAULT_INTERVAL_TIME_IN_SECOND),  # Every 15 seconds
+        'schedule': timedelta(seconds=CRAWL_INTERVAL_TIME), 
         'args': (),
     },
 }
