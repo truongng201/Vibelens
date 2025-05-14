@@ -26,7 +26,9 @@ FROM python:3.11-slim AS runtime-image
 ## install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl
+    curl \
+    librdkafka-dev \   
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ## copy Python dependencies from build image
 COPY --from=compile-image /opt/venv /opt/venv
@@ -49,5 +51,3 @@ COPY . /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV PATH="/opt/venv/bin:$PATH"
-
-CMD ["celery", "-A", "crawl_worker.main", "worker", "-B", "-l", "info"]

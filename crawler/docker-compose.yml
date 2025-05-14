@@ -25,6 +25,31 @@ services:
       - REDIS_DB=0
     networks:
       - vibelens-shared-network
+    command: celery -A crawl_worker.main worker -l info
+  
+  music-crawler-beat:
+    build:
+      context: ./music_crawler
+      dockerfile: Dockerfile
+    container_name: music-crawler-beat
+    restart: unless-stopped
+    volumes:
+      - ./music_crawler:/usr/src/app
+    depends_on:
+      - database-crawler
+    environment:
+      - POSTGRES_HOST=database-crawler
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=vibelens
+      - REDIS_HOST=cache-crawl
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=admin
+      - REDIS_DB=0
+    networks:
+      - vibelens-shared-network
+    command: celery -A crawl_worker.main beat -l info 
 
   database-crawler:
     image: postgres:16
@@ -41,6 +66,7 @@ services:
       - crawl-data:/var/lib/postgresql/data
     networks:
       - vibelens-shared-network
+
 
   pgadmin-crawler:
     image: dpage/pgadmin4:9.2

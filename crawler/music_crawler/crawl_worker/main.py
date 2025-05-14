@@ -17,7 +17,7 @@ CELERY_TASK_LIST = [
     "crawl_worker.tasks.crawl_songs",
 ]
 CRAWL_INTERVAL_TIME = os.getenv('CRAWL_INTERVAL_TIME', '3') # in hours
-DEFAULT_INTERVAL_TIME_IN_SECOND = 15
+DEFAULT_INTERVAL_TIME_IN_SECOND = 60 # 1 minute
 CELERY_BEAT_SCHEDULE = {
     'crawl-songs-every-minutes': {
         'task': "crawl_songs",    

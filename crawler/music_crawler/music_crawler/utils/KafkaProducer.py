@@ -1,6 +1,8 @@
 import json
 from confluent_kafka import Producer
+import os
 
+BOOTSTRAP_SERVERS = os.getenv('BOOTSTRAP_SERVERS', 'kafka:29092')
 
 class KafkaProducer:
     def __init__(self, topic, bootstrap_servers='kafka:29092'):
