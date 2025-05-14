@@ -12,14 +12,56 @@ services:
     volumes:
       - ./music_crawler:/usr/src/app
     depends_on:
-      - database
-      - cache-crawl
+      - database-crawler
+    environment:
+      - POSTGRES_HOST=database-crawler
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=vibelens
+      - REDIS_HOST=cache-crawl
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=admin
+      - REDIS_DB=0
     networks:
       - vibelens-shared-network
 
+  database-crawler:
+    image: postgres:16
+    container_name: database-crawler
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: vibelens
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      - crawl-data:/var/lib/postgresql/data
+    networks:
+      - vibelens-shared-network
+
+  pgadmin-crawler:
+    image: dpage/pgadmin4:9.2
+    container_name: pgadmin-crawler
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - database-crawler
+    networks:
+      - vibelens-shared-network
+
+  
   cache-crawl:
     image: bitnami/redis:7.4.2
     container_name: cache-crawl
+    volumes:
+      - cache-data:/bitnami/redis
     environment:
       - REDIS_PASSWORD=admin
     ports:
@@ -28,36 +70,9 @@ services:
     networks:
       - vibelens-shared-network
 
-  database:
-    image: postgres:16
-    container_name: database
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: vibelens
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./init-scripts:/docker-entrypoint-initdb.d/
-    networks:
-      - vibelens-shared-network
-  
-  pgadmin-crawler:
-    image: dpage/pgadmin4:9.2
-    container_name: pgadmin-crawler
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-    networks:
-      - vibelens-shared-network
-    depends_on:
-      - database
-
 volumes:
+  crawl-data:
+    driver: local
   cache-data:
     driver: local
 

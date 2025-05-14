@@ -6,7 +6,6 @@ from ..main import app
 
 @app.task(name="crawl_songs")
 def crawl_songs():
-    # print(f"Starting crawl with limit: {limit}")
     print(f"Starting crawling songs...")
     settings = get_project_settings()
     process = CrawlerProcess(settings)

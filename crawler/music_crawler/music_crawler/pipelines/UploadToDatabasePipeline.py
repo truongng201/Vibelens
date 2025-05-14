@@ -9,7 +9,7 @@ import os
 class UploadToDatabasePipeline:
     def open_spider(self, spider):
         self.connection = psycopg2.connect(
-            host=os.getenv('POSTGRES_HOST', 'database'),
+            host=os.getenv('POSTGRES_HOST', 'localhost'),
             port=os.getenv('POSTGRES_PORT', '5432'),
             database=os.getenv('POSTGRES_DB', 'vibelens'),
             user=os.getenv('POSTGRES_USER', 'admin'),
