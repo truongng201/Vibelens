@@ -11,6 +11,11 @@ services:
     restart: unless-stopped
     volumes:
       - ./music_crawler:/usr/src/app
+    depends_on:
+      - database
+      - cache-crawl
+    networks:
+      - vibelens-shared-network
 
   cache-crawl:
     image: bitnami/redis:7.4.2
@@ -20,7 +25,42 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+    networks:
+      - vibelens-shared-network
+
+  database:
+    image: postgres:16
+    container_name: database
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: vibelens
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d/
+    networks:
+      - vibelens-shared-network
+  
+  pgadmin-crawler:
+    image: dpage/pgadmin4:9.2
+    container_name: pgadmin-crawler
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - vibelens-shared-network
+    depends_on:
+      - database
 
 volumes:
   cache-data:
     driver: local
+
+networks:
+  vibelens-shared-network:
+    external: True

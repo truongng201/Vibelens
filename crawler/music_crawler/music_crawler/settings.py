@@ -64,7 +64,6 @@ DOWNLOAD_DELAY = 1
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    "music_crawler.pipelines.UploadToDatabasePipeline.UploadToDatabasePipeline": 100, # Higher number means lower priority
-   "music_crawler.pipelines.UploadToVectorDatabasePipeline.UploadToVectorDatabasePipeline": 200,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

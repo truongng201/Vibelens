@@ -7,7 +7,8 @@ RUN apt-get update && \
     build-essential \
     libpq-dev \
     curl \
-    gcc
+    gcc \
+    librdkafka-dev
 
 ## virtualenv
 ENV VIRTUAL_ENV=/opt/venv

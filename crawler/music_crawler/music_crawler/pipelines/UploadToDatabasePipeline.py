@@ -4,15 +4,16 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import psycopg2
 import os
+# from music_crawler.utils.KafkaProducer import KafkaProducer
 
 class UploadToDatabasePipeline:
     def open_spider(self, spider):
         self.connection = psycopg2.connect(
-            host=os.getenv('POSTGRES_HOST', 'localhost'),
+            host=os.getenv('POSTGRES_HOST', 'database'),
             port=os.getenv('POSTGRES_PORT', '5432'),
-            database=os.getenv('POSTGRES_DB', 'your_database_name'),
-            user=os.getenv('POSTGRES_USER', 'your_username'),
-            password=os.getenv('POSTGRES_PASSWORD', 'your_password')
+            database=os.getenv('POSTGRES_DB', 'vibelens'),
+            user=os.getenv('POSTGRES_USER', 'admin'),
+            password=os.getenv('POSTGRES_PASSWORD', 'admin')
         )
         self.cursor = self.connection.cursor()
 
@@ -46,8 +47,19 @@ class UploadToDatabasePipeline:
             # Commit the transaction
             self.connection.commit()
             print(f"Inserted item with ID {item['id']} into the database.")
+            
+            # Send the item to Kafka
+            # kafka_producer = KafkaProducer(topic='crawl-song')
+            # kafka_producer.send(item)
+            # kafka_producer.flush()
+            
         except psycopg2.Error as e:
             print(f"Error inserting item into the database: {e}")
+            # Rollback in case of error
+            self.connection.rollback()
+            raise
+        except Exception as e:
+            print(f"Error processing item: {e}")
             # Rollback in case of error
             self.connection.rollback()
             raise
