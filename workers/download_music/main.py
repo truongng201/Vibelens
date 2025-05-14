@@ -47,7 +47,11 @@ def callback(payload):
             if os.path.exists(file_path):
                 os.remove(file_path)
                 logger.info(f"🧹 Removed local file: {file_path}")
-            time.sleep(DELAY_DOWNLOAD_TIME) # Delay to avoid overwhelming the server
+            logger.info(f"⏳ Waiting {DELAY_DOWNLOAD_TIME}s to avoid hitting limits...")
+            for i in range(DELAY_DOWNLOAD_TIME):
+                time.sleep(1)
+                if i % 60 == 0:
+                    logger.info(f"⏱ Still waiting... {i}s passed")
             break  # ✅ Success
 
         except Exception as e:
