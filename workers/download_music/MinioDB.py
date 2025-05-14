@@ -35,6 +35,7 @@ class MinioDB:
             )
             print(f"📤 Uploaded '{file_path}' to bucket '{self.bucket_name}' as '{object_name}'.")
 
+
         except S3Error as e:
             print(f"❌ MinIO Error: {e}")
         except Exception as e:
