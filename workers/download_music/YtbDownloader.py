@@ -13,6 +13,7 @@ def download_ytb_mp3(song_title, song_author, song_id):
             'quiet': False,
             'no_warnings': True,
             'postprocessors': [],
+            'cookies': 'cookies.txt',  # Path to your cookies file, to bypass bot detection
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

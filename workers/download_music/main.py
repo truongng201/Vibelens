@@ -33,6 +33,8 @@ def callback(payload):
             # Step 1: Download
             file_path = download_ytb_mp3(title, artist, song_id)
             logger.info(f"✅ Downloaded: {file_path}")
+            if file_path is None:
+                raise Exception("File path is None, download failed.")
 
             # Step 2: Upload
             minio_client.upload_mp3(
