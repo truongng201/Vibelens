@@ -9,7 +9,7 @@ from logger import logger
 RETRY_DELAY = 10
 MAX_RETRIES = 5
 FAILED_TOPIC = os.getenv("RETRY_KAFKA_TOPIC", "failed-downloads")
-DELAY_DOWNLOAD_TIME = int(os.getenv("DELAY_DOWNLOAD_TIME", 30)) # 30 seconds
+DELAY_DOWNLOAD_TIME = int(os.getenv("DELAY_DOWNLOAD_TIME", "300"))  # 60 * 3 # 5 minutes
 
 minio_client = MinioDB()
 consumer = KafkaConsumer()
