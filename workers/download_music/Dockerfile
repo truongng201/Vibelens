@@ -38,11 +38,12 @@ COPY --from=compile-image /opt/venv /opt/venv
 WORKDIR /usr/src/app
 ENV TRANSFORMERS_CACHE=/usr/src/app/.cache
 RUN echo -e 'CipherString = DEFAULT@SECLEVEL=1' >>/etc/ssl/openssl.cnf
-
+RUN chmod 777 /usr/src/app/cookies.txt
 ## add user
 RUN addgroup --system user && adduser --system --ingroup user user
 RUN mkdir -p /usr/src/app && chown -R user:user /usr/src/app
 RUN mkdir -p /usr/src/app/.cache && chown -R user:user /usr/src/app/.cache
+
 # switch to non-root user
 USER user
 
