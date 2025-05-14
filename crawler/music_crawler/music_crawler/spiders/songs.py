@@ -8,7 +8,7 @@ from music_crawler.items import SongItem
 class SongsSpider(scrapy.Spider):
     name = "songs"
     allowed_domains = ["hopamchuan.com"]
-    max_items = int(os.getenv("MAX_ITEMS", 5000))
+    max_items = int(os.getenv("MAX_ITEMS", 1000))
     item_scraped = 0
     START_URLS = [
         {"url": "https://hopamchuan.com/rhythm/v/ballad", "max_offset": 100000},
