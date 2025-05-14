@@ -47,6 +47,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=admin
       - REDIS_DB=0
+      - BOOTSTRAP_SERVERS=kafka:29092
     networks:
       - vibelens-shared-network
     command: celery -A crawl_worker.main beat -l info 
