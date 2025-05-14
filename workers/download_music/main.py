@@ -9,7 +9,7 @@ from logger import logger
 RETRY_DELAY = 10
 MAX_RETRIES = 5
 FAILED_TOPIC = os.getenv("RETRY_KAFKA_TOPIC", "failed-downloads")
-DELAY_DOWNLOAD_TIME = int(os.getenv("DELAY_DOWNLOAD_TIME", "300"))  # 60 * 3 # 5 minutes
+DELAY_DOWNLOAD_TIME = int(os.getenv("DELAY_DOWNLOAD_TIME", "300"))  # 60 * 5 # 5 minutes
 
 minio_client = MinioDB()
 consumer = KafkaConsumer()
@@ -70,3 +70,10 @@ def _send_to_failed_topic(payload, reason):
     except Exception as e:
         logger.critical(f"🔥 Failed to send to dead-letter topic '{FAILED_TOPIC}': {e}")
 
+
+# Start consumer
+logger.info("📡 Starting Kafka consumer...")
+try:
+    consumer.retrieve_data(callback=callback)
+finally:
+    producer.flush()  # Ensure all messages are sent before shutdown
