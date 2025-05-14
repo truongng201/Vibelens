@@ -70,10 +70,3 @@ def _send_to_failed_topic(payload, reason):
     except Exception as e:
         logger.critical(f"🔥 Failed to send to dead-letter topic '{FAILED_TOPIC}': {e}")
 
-
-# Start consumer
-logger.info("📡 Starting Kafka consumer...")
-try:
-    consumer.retrieve_data(callback=callback)
-finally:
-    producer.flush()  # Ensure all messages are sent before shutdown
