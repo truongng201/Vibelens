@@ -29,8 +29,8 @@ class MinioDB:
             # Upload the file
             self.client.fput_object(
                 bucket_name=self.bucket_name,
-                object_name=object_name,
-                file_path=file_path + f".{extension}",
+                object_name=object_name + f".{extension}",
+                file_path=file_path,
                 content_type=f"audio/{extension}"
             )
             print(f"📤 Uploaded '{file_path}' to bucket '{self.bucket_name}' as '{object_name}'.")
