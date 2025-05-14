@@ -259,3 +259,4 @@ __pycache__/
 *-data
 celerybeat-*
 .cache
+minio-data/

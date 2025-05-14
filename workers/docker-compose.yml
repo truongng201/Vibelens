@@ -2,31 +2,43 @@ version: '3.8'
 name: vibelens-music-crawler
 
 services:
-  store-and-download-music-worker:
+  download_music:
     build:
-      context: ./store_and_download_music
+      context: ./download_music
       dockerfile: Dockerfile
-    container_name: store-and-download-worker
+    container_name: download_music
     restart: unless-stopped
+    environment:
+      KAFKA_URI: kafka:29092
+      KAFKA_TOPIC: crawl-song
+      KAFKA_GROUP_ID: 1
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET_NAME: test
     volumes:
-      - ./store_and_download_music:/usr/src/app
-    depends_on:
-      - vector-database
-      - cache-crawl
+      - ./download_music:/usr/src/app
     networks:
-      - shared-network
+      - vibelens-shared-network
+    depends_on:
+      - minio
 
-
-  vector-database:
-    image: qdrant/qdrant:v1.13.6
-    container_name: vector-database
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio-data:/data
     ports:
-      - "6333:6333"   # HTTP API port
-      - "6334:6334"   # gRPC port
-    restart: always
-  
+      - "9000:9000"
+      - "9001:9001" # MinIO Console
+    networks:
+      - vibelens-shared-network
 
-volumes:
-  vector-data:
-    driver: local
-  
+networks:
+  vibelens-shared-network:
+    external: true

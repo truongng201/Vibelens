@@ -1,2 +1,4 @@
 confluent-kafka==1.9.2
 ffmpeg-python==0.2.0
+yt_dlp==2025.4.30
+minio==7.2.15

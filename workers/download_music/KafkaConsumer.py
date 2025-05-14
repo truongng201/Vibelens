@@ -1,21 +1,17 @@
 import os
 from datetime import datetime, timedelta
-from confluent_kafka import KafkaError, KafkaException
+from confluent_kafka import Consumer, KafkaError, KafkaException
 from confluent_kafka.admin import AdminClient
-from confluent_kafka.deserializing_consumer import DeserializingConsumer
-from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.schema_registry.json_schema import JSONDeserializer
+import json
 
 from logger import logger
 
 
 class KafkaConsumer:
     def __init__(self):
-        self.kafka_uri = os.getenv("KAFKA_URI")
+        self.kafka_uri = os.getenv("KAFKA_URI", "kafka:29092")
         self.topic = os.getenv("KAFKA_TOPIC")
-        self.schema_url = os.getenv("KAFKA_SCHEMA_URL")
-        self.schema_subject = os.getenv("KAFKA_SCHEMA_SUBJECT")
-        self.group_id = os.getenv("KAFKA_GROUP_ID")
+        self.group_id = os.getenv("KAFKA_GROUP_ID", "default-group")
 
         self.consumer = None
         self.running = True
@@ -34,29 +30,18 @@ class KafkaConsumer:
             logger.exception("Kafka connection failed")
             raise ConnectionError from e
 
-    def __get_schema(self):
-        client = SchemaRegistryClient({'url': self.schema_url})
-        version = client.get_latest_version(self.schema_subject)
-        logger.info(f"Retrieved schema: {version.schema.schema_str}")
-        return version.schema.schema_str
-
-    def __create_deserializer(self):
-        schema_str = self.__get_schema()
-        return JSONDeserializer(schema_str=schema_str)
-
     def __init_consumer(self, extra_config=None):
         try:
             config = {
                 'bootstrap.servers': self.kafka_uri,
                 'group.id': self.group_id,
                 'auto.offset.reset': 'earliest',
-                'enable.auto.commit': False,
-                'value.deserializer': self.__create_deserializer()
+                'enable.auto.commit': False
             }
             if extra_config:
                 config.update(extra_config)
 
-            self.consumer = DeserializingConsumer(config)
+            self.consumer = Consumer(config)
             logger.info("Kafka consumer created successfully.")
         except Exception as e:
             logger.exception("Failed to create Kafka consumer")
@@ -107,11 +92,17 @@ class KafkaConsumer:
 
                 self.__log_message_info(msg)
 
-                value = msg.value()
-                value['offset'] = msg.offset()
+                value = msg.value().decode("utf-8") if msg.value() else None
+                if value:
+                    data = json.loads(value)
+                    payload = {
+                        **data,
+                        "offset": msg.offset(),
+                        "key": msg.key().decode("utf-8") if msg.key() else None
+                    }
 
-                if callback:
-                    callback(value)
+                    if callback:
+                        callback(payload)
 
                 try:
                     self.consumer.commit(asynchronous=False)
