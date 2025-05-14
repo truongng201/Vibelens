@@ -19,7 +19,7 @@ jobs:
         with:
           filters: |
             service:
-              - 'worker/download_music/**'
+              - 'workers/download_music/**'
 
       # run only if "worker" folder was changed
       - name: "worker is changed"
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          cd worker/music_worker
+          cd workers/download_music
           docker build -t ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-worker-download-music:latest -f Dockerfile .
 
       - name: Push Docker image to Docker Hub

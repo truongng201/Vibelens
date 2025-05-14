@@ -53,6 +53,7 @@ def callback(payload):
             logger.error(f"❌ Error processing {title} by {artist} (ID: {song_id}), retry {retries}/{MAX_RETRIES} - {e}")
             time.sleep(RETRY_DELAY)
 
+
     if retries == MAX_RETRIES:
         logger.error(f"🚨 Max retries reached. Sending to failed topic: {payload}")
         _send_to_failed_topic(payload, reason="max retries exceeded")
