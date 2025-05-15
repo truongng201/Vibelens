@@ -89,9 +89,6 @@ def crawl_songs_hopamchuan():
 
         logger.info(f"Scrapy exited with code {process.returncode}")
 
-        # Update cache
-        Cache.set(url, str(start_offset))
-
     except Exception as e:
         logger.error(f"Something went wrong during crawling: {e}")
         return "Crawling failed"
