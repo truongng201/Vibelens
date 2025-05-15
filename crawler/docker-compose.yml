@@ -50,7 +50,7 @@ services:
       - BOOTSTRAP_SERVERS=kafka:29092
     networks:
       - vibelens-shared-network
-    command: celery -A crawl_worker.main beat -l info 
+    command: celery -A crawl_worker.main beat -l info
 
   database-crawler:
     image: postgres:16

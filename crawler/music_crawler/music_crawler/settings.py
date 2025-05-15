@@ -6,7 +6,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
+import os
 BOT_NAME = "music_crawler"
 
 SPIDER_MODULES = ["music_crawler.spiders"]
@@ -18,7 +18,6 @@ NEWSPIDER_MODULE = "music_crawler.spiders"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
-
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
@@ -63,7 +62,7 @@ DOWNLOAD_DELAY = 1
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   "music_crawler.pipelines.UploadToDatabasePipeline.UploadToDatabasePipeline": 100, # Higher number means lower priority
+   "music_crawler.pipelines.UploadToDatabasePipeline": 100, # Higher number means lower priority
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

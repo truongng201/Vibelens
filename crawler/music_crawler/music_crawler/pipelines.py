@@ -29,6 +29,10 @@ class UploadToDatabasePipeline:
     def process_item(self, item, spider):
         # Check if the item already exists in the database
         try:
+            if not item.get("song_url") or not item.get("title") or not item.get("lyrics") or not item.get("artist"):
+                print(f"[WARN] Missing metadata")
+                return item
+
             self.cursor.execute("SELECT id FROM songs WHERE id = %s", (item['id'],))
             result = self.cursor.fetchone()
             if result: return None  # Skip if the item already exists
@@ -65,10 +69,10 @@ class UploadToDatabasePipeline:
             print(f"Error inserting item into the database: {e}")
             # Rollback in case of error
             self.connection.rollback()
-            raise
+            return item
         except Exception as e:
             print(f"Error processing item: {e}")
             # Rollback in case of error
             self.connection.rollback()
-            raise
+            return item
         return item
