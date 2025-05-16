@@ -21,11 +21,6 @@ def crawl_songs_hopamchuan():
         {"rhythm": "valse", "max_offset": 1000},
         {"rhythm": "fox", "max_offset": 1000},
         {"rhythm": "pop", "max_offset": 1000},
-        {"rhythm": "boston", "max_offset": 1000},
-        {"rhythm": "bostonnova", "max_offset": 1000},
-        {"rhythm": "chachacha", "max_offset": 1000},
-        {"rhythm": "rhumba", "max_offset": 1000},
-        {"rhythm": "tango", "max_offset": 1000},
     ]
 
     try:
@@ -44,9 +39,15 @@ def crawl_songs_hopamchuan():
                 start_offset = curr_offset + 10
                 break  # Found next rhythm to crawl
             else:
+                url = None
+                rhythm = None
+                start_offset = 0
+                max_offset = 0
                 continue
-
-        logger.info(f"[INITIALIZE] URL: {url} | Rhythm: {rhythm} | Offset: {start_offset}/{max_offset}")
+        
+        # If all rhythms are done, reset the cache
+        if url is None or rhythm is None:
+            return "All rhythms are done"
 
         # Build scrapy command
         cmd = [

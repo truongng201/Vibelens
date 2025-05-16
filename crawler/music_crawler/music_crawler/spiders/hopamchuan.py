@@ -5,7 +5,7 @@ from music_crawler.items import SongItem
 from music_crawler.utils.Cache import Cache 
 from scrapy.exceptions import CloseSpider
 
-MAX_SONG_ITEM = int(os.getenv("MAX_SONG_ITEM", 1000))
+MAX_SONG_ITEM = int(os.getenv("MAX_SONG_ITEM", 2000))
 
 class HopAmChuanSpider(scrapy.Spider):
     name = "hopamchuan"
