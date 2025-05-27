@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
-from typing import Annotated, Literal
+from typing import Annotated
 from typing_extensions import TypedDict
-from pydantic import BaseModel, Field
 from pinecone import Pinecone
 from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode
