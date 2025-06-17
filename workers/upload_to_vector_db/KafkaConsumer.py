@@ -36,7 +36,8 @@ class KafkaConsumer:
                 'bootstrap.servers': self.kafka_uri,
                 'group.id': self.group_id,
                 'auto.offset.reset': 'earliest',
-                'enable.auto.commit': False
+                'enable.auto.commit': False,
+                'max.poll.interval.ms': 900000,  # 15 minutes
             }
             if extra_config:
                 config.update(extra_config)

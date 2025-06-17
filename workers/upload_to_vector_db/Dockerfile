@@ -1,11 +1,14 @@
 ## base image
-FROM python:3.13-alpine AS compile-image
+FROM python:3.11-slim AS compile-image
 
 ## install dependencies
-RUN apk update && \
-    apk add --no-cache \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
     libpq-dev \
-    gcc
+    curl \
+    gcc \
+    librdkafka-dev
 
 ## virtualenv
 ENV VIRTUAL_ENV=/opt/venv
@@ -18,34 +21,36 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 ## build-image
-FROM python:3.13-alpine AS runtime-image
+FROM python:3.11-slim AS runtime-image
 
-## install nc
-RUN apk update && \
-    apk add --no-cache curl
+## install dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    librdkafka-dev \
+    ffmpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ## copy Python dependencies from build image
 COPY --from=compile-image /opt/venv /opt/venv
 
 ## set working directory
-WORKDIR /home/dev
-
+WORKDIR /usr/src/app
+ENV TRANSFORMERS_CACHE=/usr/src/app/.cache
 RUN echo -e 'CipherString = DEFAULT@SECLEVEL=1' >>/etc/ssl/openssl.cnf
-
+COPY . /usr/src/app
 ## add user
-RUN addgroup -S dev && adduser -S dev -G dev
-RUN mkdir -p /home/dev && \
-    chown -R dev:dev /home/dev
-
-# copy source code
-COPY . /home/dev
+RUN addgroup --system user && adduser --system --ingroup user user
+RUN mkdir -p /usr/src/app && chown -R user:user /usr/src/app
+RUN mkdir -p /usr/src/app/.cache && chown -R user:user /usr/src/app/.cache
 
 # switch to non-root user
-USER dev
+USER user
 
 ## set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV PATH="/opt/venv/bin:$PATH"
+
 
 CMD ["python", "main.py"]
