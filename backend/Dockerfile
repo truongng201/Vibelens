@@ -5,7 +5,12 @@ FROM python:3.13-alpine AS compile-image
 RUN apk update && \
     apk add --no-cache \
     libpq-dev \
-    gcc
+    gcc \
+    python3-dev \
+    build-base \
+    g++ \
+    musl-dev \
+    linux-headers
 
 ## virtualenv
 ENV VIRTUAL_ENV=/opt/venv
@@ -22,7 +27,7 @@ FROM python:3.13-alpine AS runtime-image
 
 ## install nc
 RUN apk update && \
-    apk add --no-cache curl
+    apk add --no-cache curl libpq
 
 ## copy Python dependencies from build image
 COPY --from=compile-image /opt/venv /opt/venv

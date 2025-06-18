@@ -9,12 +9,24 @@ services:
     restart: unless-stopped
     ports:
       - "5001:5000"
-    # environment:
-    #   - KAFKA_URI=${KAFKA_URI}
-    #   - KAFKA_TOPIC=${KAFKA_TOPIC}
-    #   - KAFKA_SCHEMA_URL=${KAFKA_SCHEMA_URL}
-    #   - KAFKA_SCHEMA_SUBJECT=${KAFKA_SCHEMA_SUBJECT}
-    #   - KAFKA_GROUP_ID=${KAFKA_GROUP_ID}
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_HOST=${PINECONE_HOST}
     volumes:
       - .:/usr/src/app
-   
+  
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001" # MinIO Console
+    

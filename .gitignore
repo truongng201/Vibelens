@@ -260,3 +260,5 @@ __pycache__/
 celerybeat-*
 .cache
 minio-data/
+
+not_commit/
