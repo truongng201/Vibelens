@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { Upload, Music, Play, Pause, ImageIcon, Sparkles, Heart, Clock, MessageSquare } from "lucide-react"
 import { toast } from "../hooks/use-toast";
 
@@ -47,7 +47,26 @@ export default function VibelensApp() {
   const [likedSongs, setLikedSongs] = useState(new Set())
   const [audioUrl, setAudioUrl] = useState(null);
   const [audioLoadingId, setAudioLoadingId] = useState(null);
-  const [audioLoading, setAudioLoading] = useState(false);
+  const [audioElement, setAudioElement] = useState(null);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (audioElement && audioRef.current !== audioElement) {
+      audioRef.current = audioElement;
+    }
+  }, [audioElement]);
+
+  useEffect(() => {
+    if (audioElement && playingId) {
+      audioElement.play();
+      const updateProgress = () => setAudioProgress(audioElement.currentTime);
+      audioElement.addEventListener('timeupdate', updateProgress);
+      return () => {
+        audioElement.removeEventListener('timeupdate', updateProgress);
+      };
+    }
+  }, [audioElement, playingId, audioUrl]);
 
   const getRecommendations = async (imageUrl, prompt) => {
     try {
@@ -191,8 +210,17 @@ export default function VibelensApp() {
   }
 
   const handlePlay = async (song) => {
+    // If clicking the same song, toggle pause/play
+    if (playingId === song.id && audioElement) {
+      if (!audioElement.paused) {
+        audioElement.pause();
+      } else {
+        audioElement.play();
+      }
+      return;
+    }
     setAudioLoadingId(song.id);
-    setIsAnalyzing(true); // Show global loading overlay
+    setIsAnalyzing(true);
     try {
       const url = await playMusicFromBackend(song.title);
       setAudioUrl(url);
@@ -201,7 +229,7 @@ export default function VibelensApp() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setAudioLoadingId(null);
-      setIsAnalyzing(false); // Hide global loading overlay
+      setIsAnalyzing(false);
     }
   }
 
@@ -754,28 +782,111 @@ export default function VibelensApp() {
                       />
                     </button>
                     <span style={{ color: "#9ca3af", fontSize: "0.875rem" }}>{formatTime(song.duration)}</span>
-                    <button
+                    {/* Song row play button logic */}
+                    <div
                       style={{
-                        width: "2rem",
-                        height: "2rem",
-                        padding: 0,
-                        backgroundColor: "transparent",
-                        border: "none",
-                        cursor: audioLoadingId === song.id ? "wait" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
-                      onClick={() => handlePlay(song)}
-                      disabled={audioLoadingId === song.id || isAnalyzing}
                     >
-                      {playingId === song.id ? (
-                        <Pause style={{ width: "1rem", height: "1rem", color: "#ffffff" }} />
-                      ) : (
-                        <Play style={{ width: "1rem", height: "1rem", color: "#ffffff" }} />
+                      {playingId !== song.id && (
+                        <button
+                          style={{
+                            width: "2rem",
+                            height: "2rem",
+                            padding: 0,
+                            backgroundColor: "transparent",
+                            border: "none",
+                            cursor: audioLoadingId === song.id ? "wait" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                          onClick={() => handlePlay(song)}
+                          disabled={audioLoadingId === song.id || isAnalyzing}
+                        >
+                          <Play style={{ width: "1rem", height: "1rem", color: "#ffffff" }} />
+                        </button>
                       )}
-                    </button>
+                    </div>
                   </div>
+
+                  {/* Audio Player for the current song */}
+                  {playingId === song.id && audioUrl && (
+                    <div style={{
+                      gridColumn: '1 / -1',
+                      margin: '0.5rem 0 1rem 0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: 'linear-gradient(90deg, #23272b 60%, #18181b 100%)',
+                      borderRadius: 12,
+                      padding: '1rem 1.5rem',
+                      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                      gap: '1.5rem',
+                      position: 'relative',
+                    }}>
+                      <img
+                        src={song.image_url || '/placeholder.svg'}
+                        alt={song.title}
+                        style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', boxShadow: '0 2px 8px #0002' }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, color: '#fff', fontSize: 18, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song.title}</div>
+                        <div style={{ color: '#b3b3b3', fontSize: 14, marginBottom: 4 }}>{song.artist}</div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={audioElement?.duration || 0}
+                          value={audioProgress}
+                          onChange={e => {
+                            if (audioElement) audioElement.currentTime = Number(e.target.value);
+                            setAudioProgress(Number(e.target.value));
+                          }}
+                          style={{ width: '100%', accentColor: '#1db954' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#b3b3b3', fontSize: 12 }}>
+                          <span>{formatTime(Math.floor(audioProgress))}</span>
+                          <span>{formatTime(Math.floor(audioElement?.duration || 0))}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (audioElement) {
+                            if (audioElement.paused) audioElement.play();
+                            else audioElement.pause();
+                          }
+                        }}
+                        style={{
+                          background: '#1db954',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: 44,
+                          height: 44,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 2px 8px #0003',
+                          cursor: 'pointer',
+                          marginLeft: 16,
+                        }}
+                      >
+                        {audioElement && !audioElement.paused ? (
+                          <Pause style={{ width: 24, height: 24, color: '#fff' }} />
+                        ) : (
+                          <Play style={{ width: 24, height: 24, color: '#fff' }} />
+                        )}
+                      </button>
+                      <audio
+                        src={audioUrl}
+                        controls={false}
+                        autoPlay
+                        ref={el => setAudioElement(el)}
+                        style={{ display: 'none' }}
+                        onEnded={() => setPlayingId(null)}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -854,11 +965,6 @@ export default function VibelensApp() {
               </p>
             </div>
           </div>
-        )}
-
-        {/* Audio Player - Fixed at bottom */}
-        {audioUrl && (
-          <audio src={audioUrl} controls autoPlay style={{ position: "fixed", bottom: 20, left: 20, zIndex: 10001 }} />
         )}
       </div>
     </>
