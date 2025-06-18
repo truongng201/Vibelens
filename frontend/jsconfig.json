@@ -25,6 +25,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["./src", "./dist/types/**/*.js", "./next-env.d.ts", "./**/*.js", "./**/*.jsx"],
+  // "include": ["./src", "./dist/types/**/*.js", "./next-env.d.ts", "./**/*.js", "./**/*.jsx"],
   "exclude": ["./node_modules"]
 }
