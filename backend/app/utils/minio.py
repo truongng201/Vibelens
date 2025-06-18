@@ -84,3 +84,13 @@ class MinioDB:
         return self.presigned_client.presigned_get_object(
             self.bucket_name, object_name, expires=expiry
         )
+        
+    def check_exists(self, object_name):
+        try:
+            self.client.stat_object(self.bucket_name, object_name)
+            return True
+        except S3Error as e:
+            if e.code == "NoSuchKey":
+                return False
+            print(f"❌ MinIO Error when checking existence: {e}")
+            return False

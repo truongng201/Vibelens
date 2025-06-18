@@ -54,6 +54,7 @@ jobs:
       - name: Build Docker image
         run: |
           cd backend/
+          echo "${{ secrets.COOKIES }}" > cookies.txt 
           docker build -t ${{ secrets.DOCKERHUB_USERNAME}}/${{ secrets.DOCKERHUB_REPOSITORY}}-backend:latest -f Dockerfile .
 
       - name: Push Docker image to Docker Hub

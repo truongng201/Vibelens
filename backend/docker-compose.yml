@@ -10,7 +10,6 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
       - PINECONE_API_KEY=${PINECONE_API_KEY}
       - PINECONE_HOST=${PINECONE_HOST}
     volumes:
