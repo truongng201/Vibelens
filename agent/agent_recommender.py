@@ -1,0 +1,82 @@
+import re
+import random
+from transformers import pipeline
+from googletrans import Translator
+from pinecone import Pinecone
+from sentence_transformers import SentenceTransformer, util
+
+class AgentRecommender:
+    def __init__(self, pinecone_api_key, pinecone_host):
+        self.captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
+        self.translator = Translator()
+        self.pinecone = Pinecone(api_key=pinecone_api_key)
+        self.index = self.pinecone.Index(host=pinecone_host)
+        self.model = SentenceTransformer('sentence-transformers/distiluse-base-multilingual-cased-v2')
+
+    def split_by_capital_letter(self, text):
+        return [s.strip() for s in re.findall(r'(?:[A-Z][^A-Z]*)', text) if s.strip()]
+
+    def process_hits(self, hits, caption_emb, lang='en'):
+        recommendations = []
+        for idx, hit in enumerate(hits):
+            full_text = hit['fields']['text']
+            lyrics_match = re.search(r'Lyrics:\s*(.*)', full_text, re.DOTALL | re.IGNORECASE)
+            lyrics = lyrics_match.group(1).strip() if lyrics_match else ""
+
+            segments = self.split_by_capital_letter(lyrics)
+            if not segments:
+                continue
+
+            segment_embs = self.model.encode(segments, convert_to_tensor=True)
+            sim_scores = util.cos_sim(caption_emb, segment_embs)[0].tolist()
+
+            best_idx = max(range(len(sim_scores)), key=lambda i: sim_scores[i])
+            best_segment = segments[best_idx]
+            best_score = round(sim_scores[best_idx], 3)
+
+            first_line = full_text.split('\n')[0]
+            title, artist = (first_line.split(' by ', 1) + ["Unknown"])[:2]
+
+            segment_start = random.randint(10, 60)
+            segment_end = segment_start + random.randint(10, 30)
+            duration = random.randint(150, 240)
+
+            recommendations.append({
+                "id": f"{lang}_{idx}",
+                "title": title.strip(),
+                "artist": artist.strip(),
+                "segment": {
+                    "start": segment_start,
+                    "end": segment_end,
+                    "description": best_segment[:100] + "...",
+                    "relevanceScore": best_score,
+                },
+                "duration": duration,
+            })
+
+        return sorted(recommendations, key=lambda x: x['segment']['relevanceScore'], reverse=True)
+
+    def recommend_from_image(self, url, top_k=5):
+        # Step 1: Caption and translate
+        en_caption = self.captioner(url)[0]['generated_text']
+        vi_caption = self.translator.translate(en_caption, src='en', dest='vi').text
+        # print(f"English Caption: {en_caption}")
+        # print(f"Vietnamese Caption: {vi_caption}")
+        # Step 2: Encode
+        en_caption_emb = self.model.encode(en_caption, convert_to_tensor=True)
+        vi_caption_emb = self.model.encode(vi_caption, convert_to_tensor=True)
+
+        # Step 3: Query Pinecone
+        vi_query_payload = {"inputs": {"text": vi_caption}, "top_k": top_k}
+        en_query_payload = {"inputs": {"text": en_caption}, "top_k": top_k}
+
+        vi_hits = self.index.search(namespace="__default__", query=vi_query_payload)['result']['hits']
+        en_hits = self.index.search(namespace="__default__", query=en_query_payload)['result']['hits']
+
+        # Step 4: Process and combine
+        recommendations_en = self.process_hits(en_hits, en_caption_emb, lang='en')
+        recommendations_vi = self.process_hits(vi_hits, vi_caption_emb, lang='vi')
+        combined = recommendations_en + recommendations_vi
+        combined = sorted(combined, key=lambda x: x['segment']['relevanceScore'], reverse=True)
+
+        return combined
