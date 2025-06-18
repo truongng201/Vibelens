@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Upload, Music, Play, Pause, ImageIcon, Sparkles, Heart, Clock } from "lucide-react"
+import { Upload, Music, Play, Pause, ImageIcon, Sparkles, Heart, Clock, MessageSquare } from "lucide-react"
 
 export default function VibelensApp() {
   const [uploadedImage, setUploadedImage] = useState(null)
+  const [imageDescription, setImageDescription] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [recommendations, setRecommendations] = useState([])
   const [playingId, setPlayingId] = useState(null)
@@ -88,7 +89,6 @@ export default function VibelensApp() {
       const reader = new FileReader()
       reader.onload = (e) => {
         setUploadedImage(e.target.result)
-        analyzeImage()
       }
       reader.readAsDataURL(file)
     }
@@ -120,6 +120,12 @@ export default function VibelensApp() {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
+
+  const handleAnalyzeClick = () => {
+    if (uploadedImage) {
+      analyzeImage()
+    }
   }
 
   return (
@@ -253,105 +259,186 @@ export default function VibelensApp() {
                   />
                 </div>
               ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                  <div style={{ position: "relative" }}>
-                    <img
-                      src={uploadedImage || "/placeholder.svg"}
-                      alt="Uploaded image"
-                      style={{
-                        borderRadius: "0.5rem",
-                        objectFit: "cover",
-                        width: "12rem",
-                        height: "12rem",
-                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                      }}
-                    />
-                    <button
-                      style={{
-                        position: "absolute",
-                        top: "0.5rem",
-                        right: "0.5rem",
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
-                        color: "#ffffff",
-                        border: "1px solid #374151",
-                        borderRadius: "0.25rem",
-                        padding: "0.25rem 0.5rem",
-                        fontSize: "0.875rem",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        setUploadedImage(null)
-                        setRecommendations([])
-                        setIsAnalyzing(false)
-                      }}
-                    >
-                      Change
-                    </button>
-                  </div>
+                <div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "1.5rem", marginBottom: "1.5rem" }}>
+                    <div style={{ position: "relative" }}>
+                      <img
+                        src={uploadedImage || "/placeholder.svg"}
+                        alt="Uploaded image"
+                        style={{
+                          borderRadius: "0.5rem",
+                          objectFit: "cover",
+                          width: "12rem",
+                          height: "12rem",
+                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <button
+                        style={{
+                          position: "absolute",
+                          top: "0.5rem",
+                          right: "0.5rem",
+                          backgroundColor: "rgba(0, 0, 0, 0.7)",
+                          color: "#ffffff",
+                          border: "1px solid #374151",
+                          borderRadius: "0.25rem",
+                          padding: "0.25rem 0.5rem",
+                          fontSize: "0.875rem",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          setUploadedImage(null)
+                          setImageDescription("")
+                          setRecommendations([])
+                          setIsAnalyzing(false)
+                        }}
+                      >
+                        Change
+                      </button>
+                    </div>
 
-                  <div style={{ flex: 1 }}>
-                    <h3
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "bold",
-                        color: "#ffffff",
-                        marginBottom: "0.5rem",
-                        margin: "0 0 0.5rem 0",
-                      }}
-                    >
-                      Your Visual Vibe
-                    </h3>
-                    <p
-                      style={{
-                        color: "#9ca3af",
-                        marginBottom: "1rem",
-                        margin: "0 0 1rem 0",
-                      }}
-                    >
-                      AI is analyzing your image to find matching music segments
-                    </p>
+                    <div style={{ flex: 1 }}>
+                      <h3
+                        style={{
+                          fontSize: "1.5rem",
+                          fontWeight: "bold",
+                          color: "#ffffff",
+                          marginBottom: "0.5rem",
+                          margin: "0 0 0.5rem 0",
+                        }}
+                      >
+                        Your Visual Vibe
+                      </h3>
+                      <p
+                        style={{
+                          color: "#9ca3af",
+                          marginBottom: "1rem",
+                          margin: "0 0 1rem 0",
+                        }}
+                      >
+                        AI will analyze your image to find matching music segments
+                      </p>
 
-                    {isAnalyzing && (
-                      <div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.75rem",
-                            marginBottom: "0.75rem",
-                          }}
-                        >
-                          <Sparkles
-                            style={{
-                              width: "1.25rem",
-                              height: "1.25rem",
-                              color: "#10b981",
-                              animation: "pulse 2s infinite",
-                            }}
-                          />
-                          <span style={{ color: "#34d399", fontWeight: "500" }}>Analyzing visual elements...</span>
-                        </div>
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "0.5rem",
-                            backgroundColor: "#1f2937",
-                            borderRadius: "0.25rem",
-                            overflow: "hidden",
-                          }}
-                        >
+                      {isAnalyzing && (
+                        <div>
                           <div
                             style={{
-                              width: "66%",
-                              height: "100%",
-                              backgroundColor: "#10b981",
-                              transition: "width 0.3s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.75rem",
+                              marginBottom: "0.75rem",
                             }}
-                          />
+                          >
+                            <Sparkles
+                              style={{
+                                width: "1.25rem",
+                                height: "1.25rem",
+                                color: "#10b981",
+                                animation: "pulse 2s infinite",
+                              }}
+                            />
+                            <span style={{ color: "#34d399", fontWeight: "500" }}>Analyzing visual elements...</span>
+                          </div>
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "0.5rem",
+                              backgroundColor: "#1f2937",
+                              borderRadius: "0.25rem",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "66%",
+                                height: "100%",
+                                backgroundColor: "#10b981",
+                                transition: "width 0.3s ease",
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
+
+                  {/* Image Description Input */}
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                        color: "#d1d5db",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <MessageSquare style={{ width: "1rem", height: "1rem" }} />
+                      Describe your image (optional)
+                    </label>
+                    <textarea
+                      value={imageDescription}
+                      onChange={(e) => setImageDescription(e.target.value)}
+                      placeholder="Tell us about the mood, setting, or feeling of your image to get better recommendations..."
+                      style={{
+                        width: "100%",
+                        minHeight: "4rem",
+                        padding: "0.75rem",
+                        backgroundColor: "#374151",
+                        border: "1px solid #4b5563",
+                        borderRadius: "0.375rem",
+                        color: "#ffffff",
+                        fontSize: "0.875rem",
+                        resize: "vertical",
+                        fontFamily: "inherit",
+                        outline: "none",
+                        transition: "border-color 0.2s",
+                      }}
+                      onFocus={(e) => (e.target.style.borderColor = "#10b981")}
+                      onBlur={(e) => (e.target.style.borderColor = "#4b5563")}
+                    />
+                    <p
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#9ca3af",
+                        marginTop: "0.25rem",
+                        margin: "0.25rem 0 0 0",
+                      }}
+                    >
+                      Example: "A peaceful sunset over the ocean with warm golden colors" or "Energetic city nightlife
+                      with neon lights"
+                    </p>
+                  </div>
+
+                  {/* Analyze Button */}
+                  {!isAnalyzing && recommendations.length === 0 && (
+                    <div style={{ textAlign: "center" }}>
+                      <button
+                        style={{
+                          backgroundColor: "#10b981",
+                          color: "#000000",
+                          fontWeight: "600",
+                          padding: "0.75rem 2rem",
+                          borderRadius: "9999px",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          fontSize: "1rem",
+                          transition: "background-color 0.2s",
+                        }}
+                        onMouseOver={(e) => (e.target.style.backgroundColor = "#059669")}
+                        onMouseOut={(e) => (e.target.style.backgroundColor = "#10b981")}
+                        onClick={handleAnalyzeClick}
+                      >
+                        <Sparkles style={{ width: "1.25rem", height: "1.25rem" }} />
+                        Find My Music
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -374,8 +461,45 @@ export default function VibelensApp() {
             >
               Recommended for you
             </h2>
-            <p style={{ color: "#9ca3af", margin: 0 }}>Based on your image • {recommendations.length} songs</p>
+            <p style={{ color: "#9ca3af", margin: 0 }}>
+              Based on your image{imageDescription && " and description"} • {recommendations.length} songs
+            </p>
           </div>
+
+          {/* Show user's description if provided */}
+          {imageDescription && (
+            <div
+              style={{
+                backgroundColor: "#1f2937",
+                border: "1px solid #374151",
+                borderRadius: "0.5rem",
+                padding: "1rem",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <MessageSquare style={{ width: "1rem", height: "1rem", color: "#10b981" }} />
+                <span style={{ fontSize: "0.875rem", fontWeight: "500", color: "#d1d5db" }}>Your description:</span>
+              </div>
+              <p
+                style={{
+                  color: "#9ca3af",
+                  fontSize: "0.875rem",
+                  fontStyle: "italic",
+                  margin: 0,
+                }}
+              >
+                "{imageDescription}"
+              </p>
+            </div>
+          )}
 
           {/* Playlist Header */}
           <div
@@ -594,8 +718,9 @@ export default function VibelensApp() {
                 margin: 0,
               }}
             >
-              Each song shows the most relevant segment based on your image analysis. The match percentage indicates how
-              well the musical elements align with the visual mood, colors, and atmosphere detected in your image.
+              Each song shows the most relevant segment based on your image analysis
+              {imageDescription && " and description"}. The match percentage indicates how well the musical elements
+              align with the visual mood, colors, and atmosphere detected in your image.
             </p>
           </div>
         </div>
