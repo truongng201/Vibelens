@@ -1,5 +1,4 @@
-import re
-import random
+import re, math, random
 from transformers import pipeline
 from googletrans import Translator
 from pinecone import Pinecone
@@ -58,7 +57,7 @@ class AgentRecommender:
                     "start": segment_start,
                     "end": segment_end,
                     "description": lyrics[:100] + "...",
-                    "relevanceScore": hit['_score'],
+                    "relevanceScore": round(math.tanh(3*hit['_score']),4)*100,
                 },
                 "duration": duration,
             })
