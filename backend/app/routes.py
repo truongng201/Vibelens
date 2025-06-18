@@ -126,8 +126,11 @@ def play_music():
     # Download the music from YouTube
     try:
         downloaded_file = download_ytb_mp3(music_title, music_artist, music_id)
+        if not downloaded_file or not os.path.exists(downloaded_file):
+            raise FileNotFoundError("Downloaded file not found")
         minio_db.upload_mp3(downloaded_file, object_name=music_id)
-        os.remove(downloaded_file)  # Clean up the downloaded file
+        if os.path.exists(downloaded_file):
+            os.remove(downloaded_file)  # Clean up
         presigned_url = minio_db.get_presigned_url(music_id + ".mp3", expiry=timedelta(minutes=60))
         logger.info(f"Music {music_id} downloaded and uploaded to MinIO successfully")
         return jsonify({"message": "Music downloaded and uploaded successfully", "url": presigned_url}), 200
