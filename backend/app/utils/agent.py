@@ -44,7 +44,7 @@ class AgentRecommender:
             # best_idx = max(range(len(sim_scores)), key=lambda i: sim_scores[i])
             # best_segment = segments[best_idx]
             # best_score = round(sim_scores[best_idx], 3)
-
+            seed = random.randint(1, 10000)
             first_line = full_text.split('.')[0]
             title, artist = (first_line.split(' by ', 1) + ["Unknown"])[:2]
 
@@ -56,6 +56,7 @@ class AgentRecommender:
                 "id": hit['_id'],
                 "title": title.strip(),
                 "artist": artist.strip(),
+                "image_url":f"https://picsum.photos/seed/{title.strip()}-{seed}/64/64",
                 "segment": {
                     "start": segment_start,
                     "end": segment_end,

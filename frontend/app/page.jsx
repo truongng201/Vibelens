@@ -675,9 +675,18 @@ export default function VibelensApp() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        overflow: "hidden",
                       }}
                     >
-                      <Music style={{ width: "1.25rem", height: "1.25rem", color: "#9ca3af" }} />
+                      {song.image_url ? (
+                        <img
+                          src={song.image_url}
+                          alt={song.title}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <Music style={{ width: "1.25rem", height: "1.25rem", color: "#9ca3af" }} />
+                      )}
                     </div>
                     <div>
                       <p
