@@ -11,7 +11,7 @@ class AgentRecommender:
         self.translator = Translator()
         self.pinecone = Pinecone(api_key=pinecone_api_key)
         self.index = self.pinecone.Index(host=pinecone_host)
-        self.model = SentenceTransformer('sentence-transformers/distiluse-base-multilingual-cased-v2')
+        # self.model = SentenceTransformer('sentence-transformers/distiluse-base-multilingual-cased-v2')
 
     def split_by_capital_letter(self, text):
         return [s.strip() for s in re.findall(r'(?:[A-Z][^A-Z]*)', text) if s.strip()]
@@ -25,23 +25,23 @@ class AgentRecommender:
 
         return en_prompt, vi_prompt
 
-    def process_hits(self, hits, caption_emb, lang='en'):
+    def process_hits(self, hits, lang='en'):
         recommendations = []
         for idx, hit in enumerate(hits):
             full_text = hit['fields']['text']
             lyrics_match = re.search(r'Lyrics:\s*(.*)', full_text, re.DOTALL | re.IGNORECASE)
             lyrics = lyrics_match.group(1).strip() if lyrics_match else ""
 
-            segments = self.split_by_capital_letter(lyrics)
-            if not segments:
-                continue
+            # segments = self.split_by_capital_letter(lyrics)
+            # if not segments:
+            #     continue
 
-            segment_embs = self.model.encode(segments, convert_to_tensor=True)
-            sim_scores = util.cos_sim(caption_emb, segment_embs)[0].tolist()
+            # segment_embs = self.model.encode(segments, convert_to_tensor=True)
+            # sim_scores = util.cos_sim(caption_emb, segment_embs)[0].tolist()
 
-            best_idx = max(range(len(sim_scores)), key=lambda i: sim_scores[i])
-            best_segment = segments[best_idx]
-            best_score = round(sim_scores[best_idx], 3)
+            # best_idx = max(range(len(sim_scores)), key=lambda i: sim_scores[i])
+            # best_segment = segments[best_idx]
+            # best_score = round(sim_scores[best_idx], 3)
 
             first_line = full_text.split('\n')[0]
             title, artist = (first_line.split(' by ', 1) + ["Unknown"])[:2]
@@ -57,8 +57,8 @@ class AgentRecommender:
                 "segment": {
                     "start": segment_start,
                     "end": segment_end,
-                    "description": best_segment[:100] + "...",
-                    "relevanceScore": best_score,
+                    "description": lyrics[:100] + "...",
+                    "relevanceScore": hit['_score'],
                 },
                 "duration": duration,
             })
@@ -78,8 +78,8 @@ class AgentRecommender:
             vi_caption += ". " + vi_user_caption
 
         # Step 2: Encode
-        en_caption_emb = self.model.encode(en_caption, convert_to_tensor=True)
-        vi_caption_emb = self.model.encode(vi_caption, convert_to_tensor=True)
+        # en_caption_emb = self.model.encode(en_caption, convert_to_tensor=True)
+        # vi_caption_emb = self.model.encode(vi_caption, convert_to_tensor=True)
 
         # Step 3: Query Pinecone
         vi_query_payload = {"inputs": {"text": vi_caption}, "top_k": top_k}
@@ -89,8 +89,8 @@ class AgentRecommender:
         en_hits = self.index.search(namespace="__default__", query=en_query_payload)['result']['hits']
 
         # Step 4: Process and combine
-        recommendations_en = self.process_hits(en_hits, en_caption_emb, lang='en')
-        recommendations_vi = self.process_hits(vi_hits, vi_caption_emb, lang='vi')
+        recommendations_en = self.process_hits(en_hits, lang='en')
+        recommendations_vi = self.process_hits(vi_hits, lang='vi')
         unique_ids = set()
         combined = []
 
