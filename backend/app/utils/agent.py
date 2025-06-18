@@ -44,11 +44,11 @@ def get_songs(context: str) -> dict:
     return results
 
 llm_vision = ChatGroq(
-    model="meta-llama/llama-4-scout-17b-16e-instruct"
+    model="deepseek-r1-distill-llama-70b"
 )
 
 llm_main = ChatGroq(
-    model="llama-3.3-70b-versatile"
+    model="deepseek-r1-distill-llama-70b"
 )
 
 tools = [get_songs]
