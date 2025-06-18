@@ -45,6 +45,9 @@ export default function VibelensApp() {
   const [playingId, setPlayingId] = useState(null)
   const [dragActive, setDragActive] = useState(false)
   const [likedSongs, setLikedSongs] = useState(new Set())
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioLoadingId, setAudioLoadingId] = useState(null);
+  const [audioLoading, setAudioLoading] = useState(false);
 
   const getRecommendations = async (imageUrl, prompt) => {
     try {
@@ -63,6 +66,25 @@ export default function VibelensApp() {
       return data;
     } catch (err) {
       console.error("Recommendation exception:", err);
+      throw err;
+    }
+  };
+
+  const playMusicFromBackend = async (musicTitle) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/play-music`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ music_title: musicTitle }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        console.error("Play music error:", data);
+        throw new Error(data.error || "Play music failed");
+      }
+      return data.url;
+    } catch (err) {
+      console.error("Play music exception:", err);
       throw err;
     }
   };
@@ -165,6 +187,21 @@ export default function VibelensApp() {
       } finally {
         setIsAnalyzing(false);
       }
+    }
+  }
+
+  const handlePlay = async (song) => {
+    setAudioLoadingId(song.id);
+    setIsAnalyzing(true); // Show global loading overlay
+    try {
+      const url = await playMusicFromBackend(song.title);
+      setAudioUrl(url);
+      setPlayingId(song.id);
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setAudioLoadingId(null);
+      setIsAnalyzing(false); // Hide global loading overlay
     }
   }
 
@@ -671,7 +708,9 @@ export default function VibelensApp() {
                         fontWeight: "600",
                       }}
                     >
-                      {song.segment.relevanceScore}%
+                      {song.segment.relevanceScore !== undefined
+                        ? `${Number(song.segment.relevanceScore).toFixed(2)}%`
+                        : "-"}
                     </span>
                   </div>
 
@@ -713,12 +752,13 @@ export default function VibelensApp() {
                         padding: 0,
                         backgroundColor: "transparent",
                         border: "none",
-                        cursor: "pointer",
+                        cursor: audioLoadingId === song.id ? "wait" : "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
-                      onClick={() => togglePlay(song.id)}
+                      onClick={() => handlePlay(song)}
+                      disabled={audioLoadingId === song.id || isAnalyzing}
                     >
                       {playingId === song.id ? (
                         <Pause style={{ width: "1rem", height: "1rem", color: "#ffffff" }} />
@@ -805,6 +845,11 @@ export default function VibelensApp() {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Audio Player - Fixed at bottom */}
+        {audioUrl && (
+          <audio src={audioUrl} controls autoPlay style={{ position: "fixed", bottom: 20, left: 20, zIndex: 10001 }} />
         )}
       </div>
     </>
