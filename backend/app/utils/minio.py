@@ -6,7 +6,7 @@ from datetime import timedelta
 class MinioDB:
     def __init__(self):
         self.endpoint_internal = os.getenv('MINIO_INTERNAL', 'minio:9000')
-        self.endpoint_external = os.getenv('MINIO_EXTERNAL', 'localhost:9000')
+        self.endpoint_external = os.getenv('MINIO_EXTERNAL', 'minio:9000')
         self.access_key = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
         self.secret_key = os.getenv('MINIO_SECRET_KEY', 'minioadmin')
         self.secure_internal = os.getenv('MINIO_SECURE_INTERNAL', 'false').lower() in ['true', '1', 'yes']

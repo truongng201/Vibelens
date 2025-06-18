@@ -7,3 +7,4 @@ langchain-groq==0.3.2
 psycopg2-binary==2.9.10 
 minio==7.2.15
 langchain-core==0.3.65
+flask-cors
