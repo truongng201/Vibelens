@@ -16,7 +16,7 @@ Vibelens is an AI-powered system that recommends the most relevant segment of a 
 
 - User uploads an image through the frontend interface.
 - Image is captioned via `im2txt` to extract semantic meaning.
-- Captions are embedded and stored in **Qdrant** for similarity search.
+- Captions are embedded and stored in **Pinecone** for similarity search.
 - Lyrics of songs are scraped and embedded using the same method.
 - The system retrieves the most semantically aligned song *segment*.
 - Users are shown a player with the highlighted part of the song.
@@ -38,9 +38,9 @@ Vibelens is an AI-powered system that recommends the most relevant segment of a 
 | Frontend                  | Next.js                                             |
 | Backend                   | Flask, Celery as worker                             |
 | Crawler                   | Scrapy (with Celery, Redis, and Scheduler)          |
-| Image Captioning          | `im2txt`, powered by LLaMA-3 Vision via **Groq**    |
-| Vector Search             | Qdrant                                              |            
-| NLP & Music Matching      | LLMChain with Groq’s `llama-3.2-90b-vision-preview` |
+| Image Captioning          | `im2txt`, powered by VIT-GPT2-IMAGE-CAPTIONING      |
+| Vector Search             | Pinecone                                            |            
+| NLP & Music Matching      | Transformer `distiluse-base-multilingual-cased-v2`  |
 | Database                  | PostgreSQL                                          |
 | Streaming                 | Kafka (for educational purposes)                    |
 | Task Queue                | Celery + Redis                                      |
@@ -70,11 +70,11 @@ chain = LLMChain(
 
 | Name                | Role                                |
 |---------------------|-------------------------------------|
-| Nguyen Xuan Truong  | Software Developer / Project Lead   |
-| Nguyen Tien Nhan    | Software Developer                  |
-| Le Mai Thanh Son    | ML/NLP Specialist                   |
-| Nguyen Son Giang    | Frontend Engineer                   |
-| Nguyen Dai An       | Software Developer                  |
+| Nguyen Xuan Truong  | DevOps Engineer / Project Lead      |
+| Nguyen Tien Nhan    | Data Engineer                       |
+| Le Mai Thanh Son    | Backend Developer                   |
+| Nguyen Son Giang    | Algorithm Specialist                |
+| Nguyen Dai An       | ML/NLP Specialist                   |
 
 ---
 
