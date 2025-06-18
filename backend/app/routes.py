@@ -9,8 +9,10 @@ import random
 import logging
 import traceback
 import re
+from flask_cors import CORS
 
 main = Blueprint('main', __name__)
+CORS(main)
 minio_db = MinioDB()
 
 # Configure logging
