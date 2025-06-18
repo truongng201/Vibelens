@@ -1,7 +1,18 @@
 from flask import jsonify, request
 from flask import Blueprint
+import os
+import uuid
+from app.utils.minio import MinioDB
+from datetime import timedelta
 
 main = Blueprint('main', __name__)
+minio_db = MinioDB()
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @main.route("/", methods=["GET"])
 def home():
@@ -16,9 +27,32 @@ def upload_image():
 
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
-    
-    # filter file name to allow only alphanumeric characters and underscores
-    
 
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Invalid file extension"}), 400
 
-    return jsonify({"message": "File uploaded successfully!"}), 200
+    # Get file extension
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    # Generate random filename
+    random_name = f"{uuid.uuid4().hex}"
+    # Save locally
+    local_path = os.path.join("uploads", random_name)
+    os.makedirs("uploads", exist_ok=True)
+    file.save(local_path)
+
+    # Upload to MinIO under 'uploads/' folder
+    minio_object_path = f"uploads/{random_name}"
+    try:
+        minio_db.upload_image(local_path, object_name=minio_object_path, extension=ext)
+        shared_url = minio_db.get_presigned_url(
+            minio_object_path, expiry=timedelta(days=7)
+        )
+        os.remove(local_path)
+    except Exception as e:
+        return jsonify({"error": f"MinIO upload failed: {str(e)}"}), 500
+
+    return jsonify({
+        "message": "File uploaded successfully!",
+        "filename": random_name,
+        "shared_url": shared_url
+    }), 200
