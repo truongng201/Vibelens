@@ -25,7 +25,9 @@ FROM python:3.11-slim AS runtime-image
 ## install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl
+    curl \
+    ffmpeg \
+    vim
 
 ## copy Python dependencies from build image
 COPY --from=compile-image /opt/venv /opt/venv

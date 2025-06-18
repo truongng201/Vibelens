@@ -1,5 +1,4 @@
-import re
-import random
+import re, math, random
 from transformers import pipeline
 from googletrans import Translator
 from pinecone import Pinecone
@@ -43,7 +42,7 @@ class AgentRecommender:
             # best_segment = segments[best_idx]
             # best_score = round(sim_scores[best_idx], 3)
 
-            first_line = full_text.split('\n')[0]
+            first_line = full_text.split('.')[0]
             title, artist = (first_line.split(' by ', 1) + ["Unknown"])[:2]
 
             segment_start = random.randint(10, 60)
@@ -58,7 +57,7 @@ class AgentRecommender:
                     "start": segment_start,
                     "end": segment_end,
                     "description": lyrics[:100] + "...",
-                    "relevanceScore": hit['_score'],
+                    "relevanceScore": round(math.tanh(3*hit['_score']),4)*100,
                 },
                 "duration": duration,
             })
@@ -101,5 +100,4 @@ class AgentRecommender:
 
         combined = sorted(combined, key=lambda x: x['segment']['relevanceScore'], reverse=True)
 
-        
         return combined

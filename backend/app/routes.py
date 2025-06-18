@@ -4,11 +4,13 @@ import os
 import uuid
 from app.utils.minio import MinioDB
 from app.utils.agent import AgentRecommender
+from app.utils.database import Database
 from datetime import timedelta
 import json
 import logging
 import traceback
 from flask_cors import CORS
+from app.utils.ytbdownloader import download_ytb_mp3
 
 main = Blueprint('main', __name__)
 CORS(main)
@@ -92,3 +94,45 @@ def recommend_music():
         response_json,
         content_type="application/json; charset=utf-8"
     )
+    
+@main.route("/play-music", methods=["POST"])
+def play_music():
+    data = request.get_json()
+    music_title = data.get("music_title", "").strip()
+    if not music_title:
+        return jsonify({"error": "Missing title"}), 400
+    
+    database = Database()
+    res = database.execute_query(
+        "SELECT id, artist FROM songs WHERE title LIKE %s",
+        (f"%{music_title}%", )
+    )
+    
+    if not res or len(res) == 0:
+        return jsonify({"error": "Music not found"}), 404
+    
+    music_id = res[0][0]  # Assuming the first column is the ID
+    music_artist = res[0][1]  # Assuming the second column is the artist
+    logger.info(f"Music ID found: {music_id}")
+    
+    # check if the music is already in the minio database
+    if minio_db.check_exists(music_id + ".mp3"):
+        logger.info(f"Music {music_id} already exists in MinIO")
+        # return presigned URL to play the music
+        presigned_url = minio_db.get_presigned_url(music_id + ".mp3", expiry=timedelta(minutes=60))
+        return jsonify({"message": "Music already exists", "url": presigned_url})
+    logger.info(f"Music {music_id} not found in MinIO, downloading from YouTube")
+
+    # Download the music from YouTube
+    try:
+        downloaded_file = download_ytb_mp3(music_title, music_artist, music_id)
+        minio_db.upload_mp3(downloaded_file, object_name=music_id)
+        os.remove(downloaded_file)  # Clean up the downloaded file
+        presigned_url = minio_db.get_presigned_url(music_id + ".mp3", expiry=timedelta(minutes=60))
+        logger.info(f"Music {music_id} downloaded and uploaded to MinIO successfully")
+        return jsonify({"message": "Music downloaded and uploaded successfully", "url": presigned_url}), 200
+    except Exception as e:
+        tb = traceback.format_exc()
+        logger.error(f"Error downloading or uploading music: {str(e)}\n{tb}")
+        return jsonify({"error": f"Error downloading or uploading music: {str(e)}", "traceback": tb}), 500
+    

@@ -6,3 +6,6 @@ transformers==4.51.2
 sentence-transformers==4.1.0
 googletrans==4.0.0-rc1
 pinecone==7.1.0
+psycopg2-binary==2.9.10
+ffmpeg-python==0.2.0
+yt_dlp==2025.4.30
