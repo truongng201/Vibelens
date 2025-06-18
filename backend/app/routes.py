@@ -33,6 +33,8 @@ def upload_image():
 
     # Get file extension
     ext = file.filename.rsplit('.', 1)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return jsonify({"error": "File extension not allowed"}), 400
     # Generate random filename
     random_name = f"{uuid.uuid4().hex}"
     # Save locally
@@ -45,7 +47,7 @@ def upload_image():
     try:
         minio_db.upload_image(local_path, object_name=minio_object_path, extension=ext)
         shared_url = minio_db.get_presigned_url(
-            minio_object_path, expiry=timedelta(days=7)
+            minio_object_path + f".{ext}", expiry=timedelta(days=7)
         )
         os.remove(local_path)
     except Exception as e:
