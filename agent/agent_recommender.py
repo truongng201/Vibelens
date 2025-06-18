@@ -43,7 +43,7 @@ class AgentRecommender:
             # best_segment = segments[best_idx]
             # best_score = round(sim_scores[best_idx], 3)
 
-            first_line = full_text.split('\n')[0]
+            first_line = full_text.split('.')[0]
             title, artist = (first_line.split(' by ', 1) + ["Unknown"])[:2]
 
             segment_start = random.randint(10, 60)
