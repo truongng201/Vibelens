@@ -123,9 +123,9 @@ export default function VibelensApp() {
       setIsAnalyzing(true);
       try {
         const imageUrl = await uploadImageToBackend(file);
-        // Optionally, you can update setUploadedImage(imageUrl) if you want to use backend-served URL for further actions
-        const recRes = await getRecommendations(imageUrl, imageDescription);
-        setRecommendations(recRes.recommendations || []);
+        // Store backend-served image URL for later recommendation
+        setUploadedImage(imageUrl);
+        // Do NOT call getRecommendations here
       } catch (err) {
         toast({ title: "Error", description: err.message, variant: "destructive" });
       } finally {
@@ -154,9 +154,17 @@ export default function VibelensApp() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  const handleAnalyzeClick = () => {
+  const handleAnalyzeClick = async () => {
     if (uploadedImage) {
-      analyzeImage()
+      setIsAnalyzing(true);
+      try {
+        const recRes = await getRecommendations(uploadedImage, imageDescription);
+        setRecommendations(recRes.recommendations || []);
+      } catch (err) {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   }
 
