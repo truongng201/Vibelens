@@ -1,10 +1,8 @@
 flask==3.1.0
 gunicorn==23.0.0
-pinecone===7.1.0
-langchain==0.3.25
-langgraph==0.4.8
-langchain-groq==0.3.2
-psycopg2-binary==2.9.10 
 minio==7.2.15
-langchain-core==0.3.65
 flask-cors
+transformers==4.51.2
+sentence-transformers==4.1.0
+googletrans==4.0.0-rc1
+pinecone==7.1.0

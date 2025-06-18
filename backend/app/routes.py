@@ -1,14 +1,13 @@
 from flask import jsonify, request
-from flask import Blueprint
+from flask import Blueprint, Response
 import os
 import uuid
 from app.utils.minio import MinioDB
 from app.utils.agent import AgentRecommender
 from datetime import timedelta
-import random
+import json
 import logging
 import traceback
-import re
 from flask_cors import CORS
 
 main = Blueprint('main', __name__)
@@ -79,31 +78,17 @@ def recommend_music():
         return jsonify({"error": "Missing image_url"}), 400
     agent = AgentRecommender()
     try:
-        result = agent.recommend_from_image(image_url, user_prompt)
-        pattern = r"\d+\.\s(.+?) by (.+?) - (.+?)(?=\n\d+\.|\Z)"
-        matches = re.findall(pattern, result, re.DOTALL)
-        recommendations = []
-        for idx, (title, artist, lyrics) in enumerate(matches, start=1):
-            duration = random.randint(150, 260)  # giả định độ dài bài hát
-            segment_start = random.randint(10, duration - 60)
-            segment_end = segment_start + 30
-            relevance = random.randint(80, 95)
+        recommendations = agent.recommend_from_image(image_url, user_prompt)
+        json_str = json.dumps(recommendations, ensure_ascii=False, indent=2)
+        print(json_str)
+        response_json = json.dumps({"recommendations": recommendations}, ensure_ascii=False, indent=2)
 
-            recommendations.append({
-                "id": str(idx),
-                "title": title.strip(),
-                "artist": artist.strip(),
-                "segment": {
-                    "start": segment_start,
-                    "end": segment_end,
-                    "description": lyrics.strip()[:100] + "...",  # Mô tả ngắn từ lời bài hát
-                    "relevanceScore": relevance,
-                },
-                "duration": duration,
-            })
-        logger.info(f"Returning {len(recommendations)} recommendations")
     except Exception as e:
         tb = traceback.format_exc()
         logger.error(f"Agent error: {str(e)}\n{tb}")
         return jsonify({"error": f"Agent error: {str(e)}", "traceback": tb}), 500
-    return jsonify({"recommendations": recommendations}), 200
+    
+    return Response(
+        response_json,
+        content_type="application/json; charset=utf-8"
+    )
