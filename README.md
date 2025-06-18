@@ -47,21 +47,35 @@ Vibelens is an AI-powered system that recommends the most relevant segment of a 
 | Music & Lyrics Processing | Celery worker (downloads mp3, scrapes lyrics)       |
 | Deployment                | Docker/Docker Swarm/Digital Ocean/Github Action     |
 
-### Example LLM Configuration
+### Example 📸 Image Captioning Model Configuration
 
 ```python
-llm = ChatGroq(
-    model="llama-3.2-90b-vision-preview",
-    temperature=0.6,
-    max_retries=2,
-    api_key=qroq_api_key
-)
+from transformers import pipeline
 
-chain = LLMChain(
-    llm=llm,
-    prompt=prompt,
-    verbose=True
-)
+# Load image-to-text pipeline
+captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
+
+# Generate caption from image URL
+caption = captioner("https://example.com/sample-image.jpg")[0]['generated_text']
+print("Caption:", caption)
+```
+
+### Example 🌍 Multilingual Sentence Embedding Model Configuration
+
+```python
+from sentence_transformers import SentenceTransformer, util
+
+# Load the multilingual embedding model
+model = SentenceTransformer('sentence-transformers/distiluse-base-multilingual-cased-v2')
+
+# Encode two sentences in English and Vietnamese
+embedding_en = model.encode("A beautiful sunset on the beach", convert_to_tensor=True)
+embedding_vi = model.encode("Hoàng hôn tuyệt đẹp trên bãi biển", convert_to_tensor=True)
+
+# Compute similarity
+score = util.cos_sim(embedding_en, embedding_vi)
+print("Similarity score:", score.item())
+
 ```
 
 ---
