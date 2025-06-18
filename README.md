@@ -38,7 +38,7 @@ Vibelens is an AI-powered system that recommends the most relevant segment of a 
 | Frontend                  | Next.js                                             |
 | Backend                   | Flask, Celery as worker                             |
 | Crawler                   | Scrapy (with Celery, Redis, and Scheduler)          |
-| Image Captioning          | `im2txt`, powered by VIT-GPT2-IMAGE-CAPTIONING      |
+| Image Captioning          | `im2txt`, powered by 'vit-gpt2-image-captioning     |
 | Vector Search             | Pinecone                                            |            
 | NLP & Music Matching      | Transformer `distiluse-base-multilingual-cased-v2`  |
 | Database                  | PostgreSQL                                          |
