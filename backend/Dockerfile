@@ -1,16 +1,13 @@
 ## base image
-FROM python:3.13-alpine AS compile-image
+FROM python:3.11-slim AS compile-image
 
 ## install dependencies
-RUN apk update && \
-    apk add --no-cache \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
     libpq-dev \
-    gcc \
-    python3-dev \
-    build-base \
-    g++ \
-    musl-dev \
-    linux-headers
+    curl \
+    gcc
 
 ## virtualenv
 ENV VIRTUAL_ENV=/opt/venv
@@ -23,30 +20,29 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 ## build-image
-FROM python:3.13-alpine AS runtime-image
+FROM python:3.11-slim AS runtime-image
 
-## install nc
-RUN apk update && \
-    apk add --no-cache curl libpq
+## install dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl
 
 ## copy Python dependencies from build image
 COPY --from=compile-image /opt/venv /opt/venv
 
 ## set working directory
-WORKDIR /home/dev
-
+WORKDIR /usr/src/app
+ENV HF_HOME=/usr/src/app/.cache
 RUN echo -e 'CipherString = DEFAULT@SECLEVEL=1' >>/etc/ssl/openssl.cnf
 
 ## add user
-RUN addgroup -S dev && adduser -S dev -G dev
-RUN mkdir -p /home/dev && \
-    chown -R dev:dev /home/dev
-
-# copy source code
-COPY . /home/dev
-
+RUN addgroup --system user && adduser --system --ingroup user user
+RUN mkdir -p /usr/src/app && chown -R user:user /usr/src/app
+RUN mkdir -p /usr/src/app/.cache && chown -R user:user /usr/src/app/.cache
 # switch to non-root user
-USER dev
+USER user
+
+COPY . /usr/src/app
 
 ## set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1

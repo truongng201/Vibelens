@@ -1,132 +1,108 @@
-import os
-from typing import Annotated
-from typing_extensions import TypedDict
+import re
+import random
+from transformers import pipeline
+from googletrans import Translator
 from pinecone import Pinecone
-from langchain_core.tools import tool
-from langchain_groq import ChatGroq
-from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import create_react_agent
-from langgraph.graph.message import add_messages
-
-pinecone_api_key = os.getenv("PINECONE_API_KEY")
-pinecone_host = os.getenv("PINECONE_HOST")
-qroq_api_key = os.getenv("GROQ_API_KEY")
-
-pc = Pinecone(
-    api_key=pinecone_api_key,
-)
-index = pc.Index(host = pinecone_host)
-
-@tool
-def get_songs(context: str) -> dict:
-    """
-    Retrieve the top 5 most relevant songs as well as their lyrics for a given context using a vector search.
-
-    Args:
-        context (str): A short description of the desired mood, vibe, or situation 
-                       (e.g., "a calm evening beach walk").
-
-    Returns:
-        dict: A dictionary with a 'result' key containing a 'hits' list.
-              Each hit includes:
-                - '_id': the song ID
-                - '_score': similarity score
-                - 'fields': a dictionary containing:
-                    - 'category': song genre or style
-                    - 'text': full description including title, artist, genre, and lyrics
-    """
-    query_payload = {
-        "inputs": {"text": context},
-        "top_k": 5
-    }
-    
-    results = index.search(namespace="__default__", query=query_payload)
-    return results
-
-llm_vision = ChatGroq(
-    model="deepseek-r1-distill-llama-70b"
-)
-
-llm_main = ChatGroq(
-    model="deepseek-r1-distill-llama-70b"
-)
-
-tools = [get_songs]
-
-
-# Fix: tool_choice must be a string ("auto" or "none") or a function dict, not a tool dict
-agent = create_react_agent(
-    model=llm_main.bind_tools(tools, tool_choice="auto"),
-    tools=tools
-)
-
-
-class State(TypedDict):
-    messages: Annotated[list, add_messages]
-    
-def img2text(state: State):
-    last_message = state["messages"][-1]
-    
-    result = llm_vision.invoke([
-        {
-            "role": "system",
-            "content": (
-                "Bạn là một trợ lý AI chuyên phân tích hình ảnh. "
-                "Nhiệm vụ của bạn là quan sát kỹ bức ảnh và prompt của người dùng, sau đó trả lời thật ngắn gọn, súc tích, rõ ràng, chỉ gồm hai phần:\n"
-                "1. Mô tả tổng quan bối cảnh bức ảnh (không quá 2 câu, tập trung vào không gian, thời gian, hoạt động chính hoặc cảm xúc chung).\n"
-                "2. Danh sách các từ khóa chính liên quan đến nội dung, vật thể, cảm xúc, chủ đề hoặc đặc điểm nổi bật trong ảnh, kết hợp với từ khóa từ prompt của người dùng (bắt buộc).\n"
-                "Chỉ trả về đúng hai mục trên, trình bày bằng tiếng Việt, không thêm giải thích, không lặp lại yêu cầu, không bổ sung thông tin ngoài hai mục trên."
-            )
-        },
-        {"role": "user", "content": last_message.content}
-    ])
-    
-    print(f"Image to text model: {result.content}")
-    
-    state["messages"].append(result)
-    return state
-
-def recommendation(state: State):
-    last_message = state["messages"][-1]
-    # Compose the system and user messages for the agent
-    system_message = {
-        "role": "system",
-        "content": (
-            "Bạn nhận được danh sách từ khóa mô tả nội dung, cảm xúc và chủ đề của bức ảnh, cùng với prompt từ người dùng. "
-            "Bạn có quyền sử dụng công cụ get_songs để tìm kiếm các bài hát phù hợp nhất từ cơ sở dữ liệu vector, dựa trên mức độ tương đồng với các từ khóa và thông tin đã cung cấp. "
-            "Hãy gọi get_songs với các từ khóa và prompt, sau đó trả về danh sách tối đa 5 bài hát phù hợp nhất, kèm theo tên bài hát, tác giả và một đoạn trích ngắn (snippet) của lời nhạc phù hợp nhất với từ khóa. "
-            "Chỉ trình bày kết quả dưới dạng danh sách đánh số (1, 2, 3...), không giải thích, không thêm thông tin ngoài tên, tác giả và đoạn trích lời nhạc."
-        )
-    }
-    user_message = {
-        "role": "user",
-        "content": last_message["content"] if isinstance(last_message, dict) and "content" in last_message else str(last_message)
-    }
-    # Call the agent with the correct message format
-    result = agent.invoke({
-        "messages": [system_message, user_message]
-    })
-        
-    # Append the result to the message history and return the updated state
-    state["messages"].append(result["messages"][-1] if isinstance(result, dict) and "messages" in result else result)
-    
-    return state
+from sentence_transformers import SentenceTransformer, util
+import os
 
 class AgentRecommender:
-    def __init__(self):
-        self.graph = self.build_graph()
+    def __init__(self, ):
+        self.pinecone_api_key = os.getenv('PINECONE_API_KEY')
+        self.pinecone_host = os.getenv('PINECONE_HOST')
+        self.captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
+        self.translator = Translator()
+        self.pinecone = Pinecone(api_key=self.pinecone_api_key)
+        self.index = self.pinecone.Index(host=self.pinecone_host)
+        # self.model = SentenceTransformer('sentence-transformers/distiluse-base-multilingual-cased-v2')
 
-    def build_graph(self):
-        graph_builder = StateGraph(State)
-        graph_builder.add_node("image2text", img2text)
-        graph_builder.add_node("recommendation", recommendation)
-        graph_builder.add_edge(START, "image2text")
-        graph_builder.add_edge("image2text", "recommendation")
-        graph_builder.add_edge("recommendation", END)
+    def split_by_capital_letter(self, text):
+        return [s.strip() for s in re.findall(r'(?:[A-Z][^A-Z]*)', text) if s.strip()]
 
-        return graph_builder.compile()
+    def translate_dual(self, prompt):
+        result = self.translator.translate(prompt, dest='vi')
+        src_lang = result.src  # Google đoán ngôn ngữ gốc
 
-    def recommend_from_image(self, user_prompt, image_url):
-        state = self.graph.invoke({"messages": [{"role": "user", "content": f"{user_prompt}: {image_url}"}]}, {"recursion_limit": 100})
+        vi_prompt = result.text
+        en_prompt = prompt if src_lang == 'en' else self.translator.translate(prompt, dest='en').text
 
-        return state['messages'][-1].content
+        return en_prompt, vi_prompt
+
+    def process_hits(self, hits, lang='en'):
+        recommendations = []
+        for idx, hit in enumerate(hits):
+            full_text = hit['fields']['text']
+            lyrics_match = re.search(r'Lyrics:\s*(.*)', full_text, re.DOTALL | re.IGNORECASE)
+            lyrics = lyrics_match.group(1).strip() if lyrics_match else ""
+
+            # segments = self.split_by_capital_letter(lyrics)
+            # if not segments:
+            #     continue
+
+            # segment_embs = self.model.encode(segments, convert_to_tensor=True)
+            # sim_scores = util.cos_sim(caption_emb, segment_embs)[0].tolist()
+
+            # best_idx = max(range(len(sim_scores)), key=lambda i: sim_scores[i])
+            # best_segment = segments[best_idx]
+            # best_score = round(sim_scores[best_idx], 3)
+
+            first_line = full_text.split('\n')[0]
+            title, artist = (first_line.split(' by ', 1) + ["Unknown"])[:2]
+
+            segment_start = random.randint(10, 60)
+            segment_end = segment_start + random.randint(10, 30)
+            duration = random.randint(150, 240)
+
+            recommendations.append({
+                "id": hit['_id'],
+                "title": title.strip(),
+                "artist": artist.strip(),
+                "segment": {
+                    "start": segment_start,
+                    "end": segment_end,
+                    "description": lyrics[:100] + "...",
+                    "relevanceScore": hit['_score'],
+                },
+                "duration": duration,
+            })
+
+        return sorted(recommendations, key=lambda x: x['segment']['relevanceScore'], reverse=True)
+
+    def recommend_from_image(self, url, user_prompt=None):
+        # Step 1: Caption and translate
+        en_caption = self.captioner(url)[0]['generated_text']
+        vi_caption = self.translator.translate(en_caption, src='en', dest='vi').text
+        # print(f"English Caption: {en_caption}")
+        # print(f"Vietnamese Caption: {vi_caption}")
+
+        if user_prompt:
+            en_user_caption, vi_user_caption = self.translate_dual(user_prompt)
+            en_caption += ". " + en_user_caption
+            vi_caption += ". " + vi_user_caption
+
+        # Step 2: Encode
+        # en_caption_emb = self.model.encode(en_caption, convert_to_tensor=True)
+        # vi_caption_emb = self.model.encode(vi_caption, convert_to_tensor=True)
+
+        # Step 3: Query Pinecone
+        vi_query_payload = {"inputs": {"text": vi_caption}, "top_k": 5}
+        en_query_payload = {"inputs": {"text": en_caption}, "top_k": 5}
+
+        vi_hits = self.index.search(namespace="__default__", query=vi_query_payload)['result']['hits']
+        en_hits = self.index.search(namespace="__default__", query=en_query_payload)['result']['hits']
+
+        # Step 4: Process and combine
+        recommendations_en = self.process_hits(en_hits, lang='en')
+        recommendations_vi = self.process_hits(vi_hits, lang='vi')
+        unique_ids = set()
+        combined = []
+
+        for rec in recommendations_en + recommendations_vi:
+            if rec["id"] not in unique_ids:
+                unique_ids.add(rec["id"])
+                combined.append(rec)
+
+        combined = sorted(combined, key=lambda x: x['segment']['relevanceScore'], reverse=True)
+
+        
+        return combined
