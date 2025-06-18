@@ -16,6 +16,15 @@ class AgentRecommender:
     def split_by_capital_letter(self, text):
         return [s.strip() for s in re.findall(r'(?:[A-Z][^A-Z]*)', text) if s.strip()]
 
+    def translate_dual(self, prompt):
+        result = self.translator.translate(prompt, dest='vi')
+        src_lang = result.src  # Google đoán ngôn ngữ gốc
+
+        vi_prompt = result.text
+        en_prompt = prompt if src_lang == 'en' else self.translator.translate(prompt, dest='en').text
+
+        return en_prompt, vi_prompt
+
     def process_hits(self, hits, caption_emb, lang='en'):
         recommendations = []
         for idx, hit in enumerate(hits):
@@ -42,7 +51,7 @@ class AgentRecommender:
             duration = random.randint(150, 240)
 
             recommendations.append({
-                "id": f"{lang}_{idx}",
+                "id": hit['_id'],
                 "title": title.strip(),
                 "artist": artist.strip(),
                 "segment": {
@@ -56,12 +65,18 @@ class AgentRecommender:
 
         return sorted(recommendations, key=lambda x: x['segment']['relevanceScore'], reverse=True)
 
-    def recommend_from_image(self, url, top_k=5):
+    def recommend_from_image(self, url, user_prompt=None, top_k=5):
         # Step 1: Caption and translate
         en_caption = self.captioner(url)[0]['generated_text']
         vi_caption = self.translator.translate(en_caption, src='en', dest='vi').text
         # print(f"English Caption: {en_caption}")
         # print(f"Vietnamese Caption: {vi_caption}")
+
+        if user_prompt:
+            en_user_caption, vi_user_caption = self.translate_dual(user_prompt)
+            en_caption += ". " + en_user_caption
+            vi_caption += ". " + vi_user_caption
+
         # Step 2: Encode
         en_caption_emb = self.model.encode(en_caption, convert_to_tensor=True)
         vi_caption_emb = self.model.encode(vi_caption, convert_to_tensor=True)
@@ -76,7 +91,14 @@ class AgentRecommender:
         # Step 4: Process and combine
         recommendations_en = self.process_hits(en_hits, en_caption_emb, lang='en')
         recommendations_vi = self.process_hits(vi_hits, vi_caption_emb, lang='vi')
-        combined = recommendations_en + recommendations_vi
+        unique_ids = set()
+        combined = []
+
+        for rec in recommendations_en + recommendations_vi:
+            if rec["id"] not in unique_ids:
+                unique_ids.add(rec["id"])
+                combined.append(rec)
+
         combined = sorted(combined, key=lambda x: x['segment']['relevanceScore'], reverse=True)
 
         return combined
