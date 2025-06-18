@@ -79,4 +79,5 @@ class AgentRecommender:
         combined = recommendations_en + recommendations_vi
         combined = sorted(combined, key=lambda x: x['segment']['relevanceScore'], reverse=True)
 
+        
         return combined

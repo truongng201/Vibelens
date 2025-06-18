@@ -30,7 +30,7 @@ def callback(payload):
             logger.info(f"🎶 Processing: {title} by {artist} (ID: {song_id})")
 
             
-
+            print("Something wrong")
         except Exception as e:
             retries += 1
             logger.error(f"❌ Error processing {title} by {artist} (ID: {song_id}), retry {retries}/{MAX_RETRIES} - {e}")
