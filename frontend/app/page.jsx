@@ -524,8 +524,8 @@ export default function VibelensApp() {
                       <div style={{ textAlign: "center" }}>
                         <button
                           style={{
-                            backgroundColor: "#10b981",
-                            color: "#000000",
+                            backgroundColor: "#083f86",
+                            color: "#ffffff",
                             fontWeight: "600",
                             padding: "0.75rem 2rem",
                             borderRadius: "9999px",
@@ -537,12 +537,12 @@ export default function VibelensApp() {
                             fontSize: "1rem",
                             transition: "background-color 0.2s",
                           }}
-                          onMouseOver={(e) => (e.target.style.backgroundColor = "#059669")}
-                          onMouseOut={(e) => (e.target.style.backgroundColor = "#10b981")}
-                          onClick={handleAnalyzeClick}
+                          onMouseOver={(e) => (e.target.style.backgroundColor = "#0a5bb8")}
+                          onMouseOut={(e) => (e.target.style.backgroundColor = "#083f86")}
+                          onClick={() => document.getElementById("file-input")?.click()}
                         >
                           <Sparkles style={{ width: "1.25rem", height: "1.25rem" }} />
-                          Find My Music
+                          Find my music
                         </button>
                       </div>
                     )}
