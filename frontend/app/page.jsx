@@ -259,7 +259,7 @@ export default function VibelensApp() {
                 style={{
                   width: "4rem",
                   height: "4rem",
-                  background: "linear-gradient(to bottom right, #34d399, #10b981)",
+                  background: "linear-gradient(to bottom right, #0a5bb8, #083f86)",
                   borderRadius: "0.5rem",
                   display: "flex",
                   alignItems: "center",
@@ -288,7 +288,7 @@ export default function VibelensApp() {
                     fontSize: "1rem",
                   }}
                 >
-                  AI-powered visual music discovery
+                Image-Based Music Recommendations System
                 </p>
               </div>
             </div>
@@ -337,8 +337,8 @@ export default function VibelensApp() {
                     </div>
                     <button
                       style={{
-                        backgroundColor: "#10b981",
-                        color: "#000000",
+                        backgroundColor: "#083f86",
+                        color: "#ffffff",
                         fontWeight: "600",
                         padding: "0.75rem 2rem",
                         borderRadius: "9999px",
@@ -350,8 +350,8 @@ export default function VibelensApp() {
                         fontSize: "1rem",
                         transition: "background-color 0.2s",
                       }}
-                      onMouseOver={(e) => (e.target.style.backgroundColor = "#059669")}
-                      onMouseOut={(e) => (e.target.style.backgroundColor = "#10b981")}
+                      onMouseOver={(e) => (e.target.style.backgroundColor = "#0a5bb8")}
+                      onMouseOut={(e) => (e.target.style.backgroundColor = "#083f86")}
                       onClick={() => document.getElementById("file-input")?.click()}
                     >
                       <ImageIcon style={{ width: "1.25rem", height: "1.25rem" }} />
@@ -555,7 +555,7 @@ export default function VibelensApp() {
 
         {/* Recommendations */}
         {recommendations.length > 0 && (
-          <div style={{ maxWidth: "72rem", margin: "0 auto", padding: "2rem" }}>
+          <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
             <div style={{ marginBottom: "2rem" }}>
               <h2
                 style={{
@@ -930,7 +930,7 @@ export default function VibelensApp() {
 
         {/* Empty State */}
         {!uploadedImage && recommendations.length === 0 && (
-          <div style={{ maxWidth: "72rem", margin: "0 auto", padding: "2rem" }}>
+          <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
             <div
               style={{
                 background: "linear-gradient(to right, #1f2937, #1f2937)",
@@ -951,7 +951,7 @@ export default function VibelensApp() {
                   marginBottom: "1rem",
                 }}
               >
-                <Music style={{ width: "1.5rem", height: "1.5rem", color: "#10b981" }} />
+                <Music style={{ width: "1.5rem", height: "1.5rem", color: "#0a5bb8" }} />
                 Discover music through your images
               </div>
               <p
