@@ -539,7 +539,7 @@ export default function VibelensApp() {
                           }}
                           onMouseOver={(e) => (e.target.style.backgroundColor = "#0a5bb8")}
                           onMouseOut={(e) => (e.target.style.backgroundColor = "#083f86")}
-                          onClick={() => document.getElementById("file-input")?.click()}
+                          onClick={handleAnalyzeClick}
                         >
                           <Sparkles style={{ width: "1.25rem", height: "1.25rem" }} />
                           Find my music
